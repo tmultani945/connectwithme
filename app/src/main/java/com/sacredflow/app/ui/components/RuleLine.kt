@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 
@@ -63,5 +65,50 @@ fun TinyRule(
             .width(32.dp)
             .height(1.dp)
             .background(color.copy(alpha = opacity))
+    )
+}
+
+/**
+ * Hairline-with-dot divider:  ──•──
+ *
+ * More minimal than [RuleLine] with `ornament=true` (which centers a 3-dot Asterism).
+ * Suits screen sections where Asterism feels too decorative — Library list dividers,
+ * Settings section breaks, between Help FAQ items.
+ */
+@Composable
+fun HairlineWithDot(
+    modifier: Modifier = Modifier,
+    dotSize: Dp = 4.dp,
+    color: Color = LocalSacredPalette.current.outlineSoft,
+    opacity: Float = 0.6f
+) {
+    val tint = color.copy(alpha = opacity)
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(tint))
+        Box(modifier = Modifier.size(dotSize).background(tint, CircleShape))
+        Box(modifier = Modifier.weight(1f).height(1.dp).background(tint))
+    }
+}
+
+/**
+ * End-dot — a single small circle, ink-color at low opacity. Used as an
+ * end-of-prayer marker on the Result + Detail screens (replaces a closing
+ * Asterism when something quieter is wanted).
+ */
+@Composable
+fun EndDot(
+    modifier: Modifier = Modifier,
+    size: Dp = 6.dp,
+    color: Color = LocalSacredPalette.current.ink3,
+    opacity: Float = 0.5f
+) {
+    Box(
+        modifier = modifier
+            .size(size)
+            .background(color.copy(alpha = opacity), CircleShape)
     )
 }

@@ -5,6 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -40,6 +41,9 @@ fun SacredFlowNavHost(navController: NavHostController) {
     val showBottomBar = currentRouteName in bottomNavRouteSimpleNames
 
     Scaffold(
+        // Transparent so the app-level SacredAppBackdrop shows through every screen.
+        // Individual screens' Scaffolds also use containerColor = Color.Transparent.
+        containerColor = Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
                 SacredBottomBar(
@@ -172,11 +176,21 @@ fun SacredFlowNavHost(navController: NavHostController) {
 
             composable<ResultRoute> {
                 ResultScreen(
-                    onDone = { navController.popBackStack(HomeRoute, inclusive = false) },
-                    onOpenSaved = { id ->
-                        navController.navigate(PrayerDetailRoute(id)) {
-                            popUpTo(HomeRoute)
+                    onDone = {
+                        // Clear back stack — works whether we arrived from onboarding
+                        // (stack: Splash → Result) or from Home (stack: Splash → Home → Create → Loading → Result).
+                        navController.navigate(HomeRoute) {
+                            popUpTo(SplashRoute) { inclusive = true }
+                            launchSingleTop = true
                         }
+                    },
+                    onOpenSaved = { id ->
+                        // Same pattern — ensure Home is the back-target for the detail screen.
+                        navController.navigate(HomeRoute) {
+                            popUpTo(SplashRoute) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                        navController.navigate(PrayerDetailRoute(id))
                     }
                 )
             }
@@ -202,7 +216,12 @@ fun SacredFlowNavHost(navController: NavHostController) {
 
             composable<CrisisResourcesRoute> {
                 CrisisResourcesScreen(
-                    onBack = { navController.popBackStack(HomeRoute, inclusive = false) }
+                    onBack = {
+                        navController.navigate(HomeRoute) {
+                            popUpTo(SplashRoute) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
         }

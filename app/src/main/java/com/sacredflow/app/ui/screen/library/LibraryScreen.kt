@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sacredflow.app.data.repository.LibraryFilter
 import com.sacredflow.app.ui.components.EmptyState
+import com.sacredflow.app.ui.components.HairlineWithDot
 import com.sacredflow.app.ui.components.PrayerCard
 import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
@@ -236,6 +237,8 @@ private fun LibraryContent(
                 )
             }
         }
+        // Subtle divider between filter chips and the saved-prayer list.
+        HairlineWithDot(modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp))
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Powerful — a single mountain peak. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+    <path
+        android:pathData="M 14 60 L 40 18 L 66 60"
+        android:strokeWidth="2.5"
+        android:strokeColor="#3D3527"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

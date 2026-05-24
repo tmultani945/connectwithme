@@ -1,6 +1,5 @@
 package com.sacredflow.app.ui.screen.splash
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sacredflow.app.ui.components.Asterism
@@ -38,15 +35,10 @@ fun SplashScreen(
     }
 
     val palette = LocalSacredPalette.current
+    // The global SacredAppBackdrop renders the sunrise photo + warm gradient behind
+    // every screen, so this composable just contributes content + paper texture.
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(Color(0xFFF4E5CC).copy(alpha = 0.5f), MaterialTheme.colorScheme.background)
-                )
-            )
-            .sacredPaper(density = 0.5f),
+        modifier = Modifier.fillMaxSize().sacredPaper(density = 0.5f),
         contentAlignment = Alignment.Center
     ) {
         Column(

@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sacredflow.app.ui.components.HairlineWithDot
 import com.sacredflow.app.ui.components.SectionHeader
 import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
@@ -127,7 +128,11 @@ fun SettingsScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HairlineWithDot()
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
                 item { SectionHeader("Subscription") }
                 item {
                     SettingsRow(
@@ -137,7 +142,11 @@ fun SettingsScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HairlineWithDot()
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
                 item { SectionHeader("Library") }
                 item {
                     SettingsRow(
@@ -148,7 +157,11 @@ fun SettingsScreen(
                     )
                 }
 
-                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HairlineWithDot()
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
                 item { SectionHeader("About") }
                 item { SettingsRow(title = "Help & disclaimer", onClick = onOpenHelp) }
                 item {

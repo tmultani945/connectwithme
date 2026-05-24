@@ -75,6 +75,7 @@ import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
 import com.sacredflow.app.ui.theme.PillShape
+import com.sacredflow.app.ui.util.iconRes
 import kotlinx.coroutines.delay
 
 private enum class CreateStep {
@@ -275,7 +276,8 @@ private fun StepShell(
         if (bottomAction != null) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(bottom = 24.dp)
             ) {
                 bottomAction()
@@ -295,17 +297,21 @@ private fun StepRecipient(
     onAdvance: () -> Unit
 ) {
     val palette = LocalSacredPalette.current
+    val canContinue = if (state.isCustomRecipientMode) {
+        state.customRecipientDraft.isNotBlank()
+    } else {
+        // A built-in recipient is selected (recipient defaults to "Universe" so always valid).
+        !state.recipient.isCustom
+    }
     StepShell(
         question = "To whom\nshall this be addressed?",
         helper = "or to what",
         bottomAction = {
-            AnimatedVisibility(
-                visible = state.isCustomRecipientMode && state.customRecipientDraft.isNotBlank(),
-                enter = fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.85f),
-                exit = fadeOut(tween(150)) + scaleOut(tween(150))
-            ) {
-                NextButton(onClick = onAdvance)
-            }
+            PrimaryButton(
+                text = "Continue",
+                onClick = onAdvance,
+                enabled = canContinue
+            )
         }
     ) {
         Column {
@@ -322,10 +328,8 @@ private fun StepRecipient(
                         DenseChip(
                             label = option.displayName,
                             selected = isSelected,
-                            onClick = {
-                                onAction(CreateAction.SetRecipient(option))
-                                onAdvance()
-                            }
+                            // Selecting a built-in only sets state — no auto-advance.
+                            onClick = { onAction(CreateAction.SetRecipient(option)) }
                         )
                     }
                 DenseChip(
@@ -368,13 +372,11 @@ private fun StepTopic(
         question = "What is\nthis about?",
         helper = "the topic, in your words",
         bottomAction = {
-            AnimatedVisibility(
-                visible = state.topic.isNotBlank(),
-                enter = fadeIn(tween(220)) + scaleIn(tween(220), initialScale = 0.85f),
-                exit = fadeOut(tween(150)) + scaleOut(tween(150))
-            ) {
-                NextButton(onClick = onAdvance)
-            }
+            PrimaryButton(
+                text = "Continue",
+                onClick = onAdvance,
+                enabled = state.topic.isNotBlank()
+            )
         }
     ) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -469,7 +471,10 @@ private fun StepTone(
     val listState = rememberLazyListState()
     StepShell(
         question = "How should\nyou address?",
-        helper = "the tone of voice"
+        helper = "the tone of voice",
+        bottomAction = {
+            PrimaryButton(text = "Continue", onClick = onAdvance)
+        }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyRow(
@@ -482,10 +487,8 @@ private fun StepTone(
                     InlineToneCard(
                         tone = tone,
                         selected = state.tone == tone,
-                        onClick = {
-                            onAction(CreateAction.SetTone(tone))
-                            onAdvance()
-                        }
+                        // Selecting only sets state — user advances via Continue.
+                        onClick = { onAction(CreateAction.SetTone(tone)) }
                     )
                 }
             }
@@ -513,11 +516,25 @@ private fun InlineToneCard(tone: Tone, selected: Boolean, onClick: () -> Unit) {
             modifier = Modifier.fillMaxSize().padding(22.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(
-                text = if (selected) "SELECTED" else "TONE",
-                style = typo.overline,
-                color = if (selected) palette.primaryInk else palette.ink3
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = if (selected) "SELECTED" else "TONE",
+                    style = typo.overline,
+                    color = if (selected) palette.primaryInk else palette.ink3
+                )
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(tone.iconRes()),
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                        (if (selected) palette.primaryInk else palette.ink2).copy(alpha = 0.7f)
+                    )
+                )
+            }
             Text(text = tone.displayName, style = MaterialTheme.typography.displaySmall, color = palette.primaryInk)
             Text(text = tone.descriptor, style = MaterialTheme.typography.bodySmall, color = palette.ink2)
             Spacer(modifier = Modifier.weight(1f))
