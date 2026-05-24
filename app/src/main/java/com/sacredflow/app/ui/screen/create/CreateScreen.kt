@@ -60,7 +60,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,6 +78,7 @@ import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
 import com.sacredflow.app.ui.theme.PillShape
+import com.sacredflow.app.ui.util.backgroundRes
 import com.sacredflow.app.ui.util.iconRes
 import kotlinx.coroutines.delay
 
@@ -500,49 +504,73 @@ private fun StepTone(
 private fun InlineToneCard(tone: Tone, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalSacredPalette.current
     val typo = LocalSacredTypography.current
+    val shape = RoundedCornerShape(20.dp)
     Card(
         modifier = Modifier.width(240.dp).height(280.dp).clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface
-        ),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(
-            1.dp,
-            if (selected) palette.primaryInk.copy(alpha = 0.5f) else palette.outlineSoft
+            if (selected) 2.dp else 1.dp,
+            if (selected) palette.primaryInk else palette.outlineSoft
         )
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(22.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = if (selected) "SELECTED" else "TONE",
-                    style = typo.overline,
-                    color = if (selected) palette.primaryInk else palette.ink3
-                )
-                androidx.compose.foundation.Image(
-                    painter = androidx.compose.ui.res.painterResource(tone.iconRes()),
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp),
-                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                        (if (selected) palette.primaryInk else palette.ink2).copy(alpha = 0.7f)
+        Box(modifier = Modifier.fillMaxSize().clip(shape)) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(tone.backgroundRes()),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            // Linen scrim — denser at the bottom so prose stays readable.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                (if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface)
+                                    .copy(alpha = 0.40f),
+                                (if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface)
+                                    .copy(alpha = 0.78f),
+                                (if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface)
+                                    .copy(alpha = 0.92f)
+                            )
+                        )
                     )
+            )
+            Column(
+                modifier = Modifier.fillMaxSize().padding(22.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (selected) "SELECTED" else "TONE",
+                        style = typo.overline,
+                        color = if (selected) palette.primaryInk else palette.ink3
+                    )
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(tone.iconRes()),
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            (if (selected) palette.primaryInk else palette.ink2).copy(alpha = 0.7f)
+                        )
+                    )
+                }
+                Text(text = tone.displayName, style = MaterialTheme.typography.displaySmall, color = palette.primaryInk)
+                Text(text = tone.descriptor, style = MaterialTheme.typography.bodySmall, color = palette.ink2)
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "“${tone.sampleLine}”",
+                    style = typo.quoteBody.copy(fontSize = 17.sp),
+                    color = palette.primaryInk.copy(alpha = 0.85f)
                 )
             }
-            Text(text = tone.displayName, style = MaterialTheme.typography.displaySmall, color = palette.primaryInk)
-            Text(text = tone.descriptor, style = MaterialTheme.typography.bodySmall, color = palette.ink2)
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = "“${tone.sampleLine}”",
-                style = typo.quoteBody.copy(fontSize = 17.sp),
-                color = palette.primaryInk.copy(alpha = 0.85f)
-            )
         }
     }
 }

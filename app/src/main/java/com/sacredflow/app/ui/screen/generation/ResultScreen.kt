@@ -216,7 +216,7 @@ fun ResultScreen(
                     )
                     IconActionPill(
                         icon = Icons.Outlined.RecordVoiceOver,
-                        label = "Chant with me",
+                        label = "Speak after me",
                         onClick = practice::start,
                         enabled = state.text.isNotBlank()
                     )

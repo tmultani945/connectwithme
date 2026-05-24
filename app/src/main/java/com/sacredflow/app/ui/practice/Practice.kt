@@ -431,7 +431,7 @@ fun PracticeSheet(state: PracticeState) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Chant with me",
+                    text = "Speak after me",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )

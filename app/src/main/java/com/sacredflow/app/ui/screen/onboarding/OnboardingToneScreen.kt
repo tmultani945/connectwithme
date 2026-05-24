@@ -28,6 +28,7 @@ import com.sacredflow.app.ui.components.PrimaryButton
 import com.sacredflow.app.ui.components.ToneCard
 import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
+import com.sacredflow.app.ui.util.backgroundRes
 import com.sacredflow.app.ui.util.iconRes
 
 @Composable
@@ -78,7 +79,8 @@ fun OnboardingToneScreen(
                             sampleLine = tone.sampleLine,
                             selected = state.tone == tone,
                             onClick = { viewModel.onAction(OnboardingAction.SetTone(tone)) },
-                            iconRes = tone.iconRes()
+                            iconRes = tone.iconRes(),
+                            backgroundRes = tone.backgroundRes()
                         )
                     }
                 }
