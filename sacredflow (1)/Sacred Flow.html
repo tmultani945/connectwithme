@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sacred Flow — Hi-Fi Design</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500;1,9..144,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="tokens.css">
+
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #f0eee9;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #2A2419;
+    height: 100%;
+    overflow: hidden;
+  }
+  #root { width: 100vw; height: 100vh; }
+</style>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Component scripts -->
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="sf-icons.jsx"></script>
+<script type="text/babel" src="sf-frame.jsx"></script>
+<script type="text/babel" src="sf-components.jsx"></script>
+<script type="text/babel" src="screens-onboarding.jsx"></script>
+<script type="text/babel" src="screens-main.jsx"></script>
+<script type="text/babel" src="screens-secondary.jsx"></script>
+<script type="text/babel" src="screens-result-variants.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+const SF_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "light",
+  "serif": "fraunces"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(SF_TWEAK_DEFAULTS);
+  const dark = tweaks.theme === 'dark';
+
+  // Apply serif class to body so all artboards inherit
+  React.useEffect(() => {
+    const cls = `sf-serif--${tweaks.serif}`;
+    document.body.classList.add(cls);
+    return () => document.body.classList.remove(cls);
+  }, [tweaks.serif]);
+
+  // Helper: wrap any screen function in an SFFrame
+  const board = (id, label, Screen, screenProps = {}) => (
+    <DCArtboard id={id} label={label} width={380} height={820}>
+      <SFFrame dark={dark} width={380} height={820}>
+        <Screen {...screenProps} />
+      </SFFrame>
+    </DCArtboard>
+  );
+
+  return (
+    <React.Fragment>
+      <DesignCanvas
+        title="Sacred Flow"
+        subtitle="Belief-neutral contemplative practice · Android · 19 screens, one cohesive direction"
+      >
+        <DCSection id="brand-onboarding" title="Brand & Onboarding"
+          subtitle="First-run flow — establishes the contemplative mood. 6 steps + splash.">
+          {board('splash',    '01 · Splash',                ScreenSplash)}
+          {board('welcome',   '02 · Welcome',               ScreenWelcome)}
+          {board('use-case',  '03 · Use Case',              ScreenUseCase)}
+          {board('recipient', '04 · Recipient',             ScreenRecipient)}
+          {board('need',      '05 · Need (max 2)',          ScreenNeed)}
+          {board('tone',      '06 · Tone',                  ScreenTone)}
+          {board('context',   '07 · Personal Context',      ScreenContext)}
+        </DCSection>
+
+        <DCSection id="daily" title="Daily practice — the hero loop"
+          subtitle="Home → Create → Loading → Result → Detail. Result is the hero screen.">
+          {board('home',      '08 · Home',                  ScreenHome)}
+          {board('create',    '09 · Create',                ScreenCreate)}
+          {board('loading',   '10 · Generation Loading',    ScreenLoading)}
+          {board('result',    '11 · Result · the hero ★',   ScreenResult)}
+          {board('detail',    '12 · Prayer Detail',         ScreenDetail)}
+          {board('practice',  '13 · Practice · bottom sheet', ScreenPractice)}
+        </DCSection>
+
+        <DCSection id="manage" title="Library & manage"
+          subtitle="Browse, organize, configure.">
+          {board('library',   '14 · Library',               ScreenLibrary)}
+          {board('reminder',  '15 · Reminder',              ScreenReminder)}
+          {board('settings',  '16 · Settings',              ScreenSettings)}
+        </DCSection>
+
+        <DCSection id="plus-support" title="Plus & support"
+          subtitle="Upsell + about + life-critical safety screen.">
+          {board('paywall',   '17 · Paywall',               ScreenPaywall)}
+          {board('help',      '18 · Help & Disclaimer',     ScreenHelp)}
+          {board('crisis',    '19 · Crisis Resources ⚑',    ScreenCrisis)}
+        </DCSection>
+
+        <DCSection id="result-variants" title="★ Result screen — alternative directions"
+          subtitle="Three other ways the hero screen could go. Same prayer, same content slots, different concept. Tell me which to pull through the rest of the product.">
+          {board('result-a', 'A · Bone & Ink',     ResultVariantA)}
+          {board('result-b', 'B · The Window',     ResultVariantB)}
+          {board('result-c', 'C · Vellum',         ResultVariantC)}
+          {board('result-current', 'Current · Warm letterpress', ScreenResult, { fadeIn: false })}
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme">
+          <TweakRadio
+            value={tweaks.theme}
+            onChange={v => setTweak('theme', v)}
+            options={[
+              { value: 'light', label: 'Light' },
+              { value: 'dark',  label: 'Dark' },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection label="Serif font">
+          <TweakSelect
+            value={tweaks.serif}
+            onChange={v => setTweak('serif', v)}
+            options={[
+              { value: 'cormorant',  label: 'Cormorant Garamond · current' },
+              { value: 'fraunces',   label: 'Fraunces · warmer' },
+              { value: 'source',     label: 'Source Serif · modern editorial' },
+              { value: 'ebgaramond', label: 'EB Garamond · classical' },
+            ]}
+          />
+        </TweakSection>
+
+        <div style={{
+          fontSize: 11, color: 'rgba(60,50,40,0.6)',
+          padding: '8px 4px 0', lineHeight: 1.4,
+        }}>
+          Drag any artboard's label to reorder. Click ⛶ to view fullscreen.
+          Light mode only on this pass — dark is in the brief for the next round.
+        </div>
+      </TweaksPanel>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+name = "sacredflow-api"
+main = "src/index.js"
+compatibility_date = "2025-01-15"
+
+# Public defaults; override by setting `wrangler secret put` (keys) or editing here (model/voice).
+[vars]
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
+OPENAI_TTS_MODEL = "tts-1"
+OPENAI_TTS_VOICE = "shimmer"
+
+# Secrets — set via wrangler secret put:
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler secret put OPENAI_API_KEY
+# Never stored in this file.

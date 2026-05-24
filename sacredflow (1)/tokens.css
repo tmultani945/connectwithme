@@ -1,0 +1,226 @@
+/* Sacred Flow — design tokens */
+
+:root {
+  /* ── Color (light) ─────────────────────────────────────── */
+  --sf-bg:            #FAF7F1;   /* linen background */
+  --sf-surface:       #FFFDF8;   /* near-white card surface */
+  --sf-surface-2:     #F3EDDF;   /* warm beige sub-surface */
+  --sf-surface-var:   #EDE7DA;   /* warm gray */
+
+  --sf-primary:       #7C6F5A;   /* warm taupe */
+  --sf-primary-ink:   #3D3527;   /* deep brown for text on linen */
+  --sf-primary-soft:  #EFE6D2;   /* primary container */
+
+  --sf-secondary:     #8DA48E;   /* sage */
+  --sf-secondary-soft:#E2EBE0;
+
+  --sf-tertiary:      #B98970;   /* rust / terracotta */
+  --sf-tertiary-soft: #F1E0D2;
+
+  --sf-outline:       #B5AB95;
+  --sf-outline-soft:  #D9D1BD;
+  --sf-error:         #9C5A4E;
+
+  --sf-ink:           #2A2419;   /* main text */
+  --sf-ink-2:         #5C5240;   /* secondary text */
+  --sf-ink-3:         #8B8167;   /* tertiary / hint text */
+
+  /* ── Type ──────────────────────────────────────────────── */
+  --sf-serif:  'Cormorant Garamond', 'Cormorant SC', Georgia, serif;
+  --sf-sans:   'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Spacing ───────────────────────────────────────────── */
+  --sf-1: 4px;  --sf-2: 8px;  --sf-3: 12px; --sf-4: 16px;
+  --sf-5: 20px; --sf-6: 24px; --sf-7: 32px; --sf-8: 48px; --sf-9: 64px;
+
+  /* ── Radius ────────────────────────────────────────────── */
+  --sf-r-xs: 8px;  --sf-r-sm: 12px; --sf-r-md: 16px;
+  --sf-r-lg: 24px; --sf-r-xl: 32px; --sf-r-pill: 999px;
+
+  /* ── Shadow ─ very soft, paper-like ────────────────────── */
+  --sf-shadow-1: 0 1px 0 rgba(60,45,20,0.04), 0 2px 6px rgba(60,45,20,0.05);
+  --sf-shadow-2: 0 1px 0 rgba(60,45,20,0.05), 0 6px 18px rgba(60,45,20,0.08);
+  --sf-shadow-3: 0 8px 30px rgba(60,45,20,0.12);
+}
+
+/* Dark — applied to the .sf-dark wrapper */
+.sf-dark {
+  --sf-bg:            #14110C;
+  --sf-surface:       #1A1610;
+  --sf-surface-2:     #221C13;
+  --sf-surface-var:   #2A2419;
+
+  --sf-primary:       #D7C8AE;
+  --sf-primary-ink:   #F3EBD8;
+  --sf-primary-soft:  #3A3122;
+
+  --sf-secondary:     #B6CCB6;
+  --sf-secondary-soft:#2C3A2C;
+
+  --sf-tertiary:      #E0B498;
+  --sf-tertiary-soft: #3A2C20;
+
+  --sf-outline:       #5C5240;
+  --sf-outline-soft:  #3A3122;
+  --sf-error:         #E59A8C;
+
+  --sf-ink:           #F3EBD8;
+  --sf-ink-2:         #C7BCA1;
+  --sf-ink-3:         #8B8167;
+}
+
+/* Font swap tweak */
+.sf-serif--cormorant { --sf-serif: 'Cormorant Garamond', Georgia, serif; }
+.sf-serif--fraunces  { --sf-serif: 'Fraunces', Georgia, serif; }
+.sf-serif--source    { --sf-serif: 'Source Serif 4', 'Source Serif Pro', Georgia, serif; }
+.sf-serif--ebgaramond { --sf-serif: 'EB Garamond', Georgia, serif; }
+
+/* Paper grain texture — applied as :before to .sf-paper */
+.sf-paper { position: relative; }
+.sf-paper::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0 0.18  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+  opacity: 0.07; mix-blend-mode: multiply; z-index: 0;
+}
+.sf-dark .sf-paper::before { opacity: 0.12; mix-blend-mode: screen; }
+
+/* Soft vignette */
+.sf-vignette { position: relative; }
+.sf-vignette::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(80,50,15,0.10) 100%);
+  z-index: 1;
+}
+.sf-dark .sf-vignette::after {
+  background: radial-gradient(120% 80% at 50% 50%, transparent 55%, rgba(0,0,0,0.45) 100%);
+}
+
+/* Type utility classes */
+.sf-display {
+  font-family: var(--sf-serif);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+  color: var(--sf-ink);
+}
+.sf-headline {
+  font-family: var(--sf-serif);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  color: var(--sf-ink);
+}
+.sf-prayer-body {
+  font-family: var(--sf-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.55;
+  color: var(--sf-ink);
+  letter-spacing: 0.005em;
+}
+.sf-body {
+  font-family: var(--sf-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--sf-ink-2);
+}
+.sf-label {
+  font-family: var(--sf-sans);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--sf-ink);
+}
+.sf-overline {
+  font-family: var(--sf-sans);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sf-ink-3);
+}
+.sf-recipient-badge {
+  font-family: var(--sf-sans);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sf-primary);
+}
+
+/* breathing animation */
+@keyframes sf-breathe {
+  0%, 100% { transform: scale(0.85); opacity: 0.55; }
+  50%      { transform: scale(1.0);  opacity: 0.85; }
+}
+.sf-breathe { animation: sf-breathe 10s ease-in-out infinite; }
+
+@keyframes sf-pulse-heart {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+.sf-heart-pulse { animation: sf-pulse-heart 3.5s ease-in-out infinite; }
+
+@keyframes sf-fade-word {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sf-fade-word { animation: sf-fade-word 0.45s ease-out both; }
+
+/* ── Waterfall: vertical streams of light descending ────────── */
+@keyframes sf-fall {
+  0%   { transform: translateY(-320px); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(880px); opacity: 0; }
+}
+@keyframes sf-mist-drift {
+  0%, 100% { opacity: 0.6; transform: translateX(-4%) scaleY(1); }
+  50%      { opacity: 0.85; transform: translateX(4%) scaleY(1.1); }
+}
+.sf-waterfall-layer {
+  position: absolute; inset: 0;
+  pointer-events: none; overflow: hidden;
+  mix-blend-mode: soft-light;
+  z-index: 4;
+}
+.sf-dark .sf-waterfall-layer {
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+.sf-waterfall-streak {
+  position: absolute; top: 0; width: 1px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(255, 248, 230, 0.55) 30%,
+    rgba(255, 245, 215, 0.95) 55%,
+    rgba(255, 248, 230, 0.55) 75%,
+    transparent 100%);
+  filter: blur(0.4px);
+  animation: sf-fall linear infinite;
+  will-change: transform;
+}
+.sf-dark .sf-waterfall-streak {
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(200, 220, 245, 0.4) 30%,
+    rgba(220, 235, 255, 0.9) 55%,
+    rgba(200, 220, 245, 0.4) 75%,
+    transparent 100%);
+}
+.sf-waterfall-mist {
+  position: absolute; left: -10%; right: -10%; bottom: 0;
+  height: 80px;
+  background: radial-gradient(60% 100% at 50% 100%,
+    rgba(255, 250, 230, 0.45),
+    transparent 70%);
+  animation: sf-mist-drift 14s ease-in-out infinite;
+}
+.sf-dark .sf-waterfall-mist {
+  background: radial-gradient(60% 100% at 50% 100%,
+    rgba(210, 225, 245, 0.35),
+    transparent 70%);
+}

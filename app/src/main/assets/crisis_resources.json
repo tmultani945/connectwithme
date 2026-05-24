@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "default": "US",
+  "regions": {
+    "US": [
+      {
+        "name": "988 Suicide & Crisis Lifeline",
+        "description": "24/7 free and confidential support across the United States.",
+        "phone": "988",
+        "sms": "988",
+        "url": "https://988lifeline.org"
+      },
+      {
+        "name": "Crisis Text Line",
+        "description": "Text HOME to 741741 to connect with a counselor.",
+        "phone": null,
+        "sms": "741741",
+        "url": "https://www.crisistextline.org"
+      }
+    ],
+    "GB": [
+      {
+        "name": "Samaritans",
+        "description": "Free, confidential support, any time.",
+        "phone": "116123",
+        "sms": null,
+        "url": "https://www.samaritans.org"
+      },
+      {
+        "name": "Shout",
+        "description": "Text SHOUT to 85258 for a free, anonymous text conversation.",
+        "phone": null,
+        "sms": "85258",
+        "url": "https://giveusashout.org"
+      }
+    ],
+    "CA": [
+      {
+        "name": "9-8-8 Suicide Crisis Helpline",
+        "description": "24/7 free and confidential support across Canada.",
+        "phone": "988",
+        "sms": "988",
+        "url": "https://988.ca"
+      }
+    ],
+    "AU": [
+      {
+        "name": "Lifeline Australia",
+        "description": "24/7 crisis support and suicide prevention.",
+        "phone": "131114",
+        "sms": null,
+        "url": "https://www.lifeline.org.au"
+      }
+    ],
+    "IN": [
+      {
+        "name": "iCall",
+        "description": "Free counselling support over phone and email.",
+        "phone": "9152987821",
+        "sms": null,
+        "url": "https://icallhelpline.org"
+      }
+    ]
+  },
+  "global": {
+    "name": "Find a Helpline",
+    "description": "International directory of free, confidential helplines.",
+    "url": "https://findahelpline.com"
+  }
+}

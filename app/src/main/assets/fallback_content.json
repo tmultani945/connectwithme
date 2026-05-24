@@ -1,0 +1,66 @@
+{
+  "version": "1.0",
+  "generic": [
+    "For the breath that just arrived. For the small light at the window. For the people whose names live quietly in this heart. For what is here — even the difficult parts — thank you. Thank you. Thank you.",
+    "Let this moment soften. Let the day's edges blur for a moment. May whatever rests within ease just slightly. May the next breath arrive on its own."
+  ],
+  "byUseCase": {
+    "Prayer": {
+      "gentle": [
+        "May the quiet of this moment find you. May worry loosen its grip, even just for now. May peace meet you in the small things — the cool side of the pillow, the warmth of a cup held in both hands, the kindness of an ordinary breath."
+      ],
+      "hopeful": [
+        "May the morning carry something worth holding. May the path ahead feel lighter than expected. May small good things arrive from unexpected directions, and may you have the steadiness to receive them."
+      ],
+      "thankful": [
+        "For this breath. For these hands. For the soft light pressing through the window. For the long line of people whose love is somewhere inside this body — known and unknown — thank you."
+      ],
+      "grounded": [
+        "Let me stay close to what is real. Let the weight of my feet on the floor be enough. Let me not chase what is not mine, and let me not abandon what is."
+      ]
+    },
+    "Intention": {
+      "grounded": [
+        "Today I will move slowly enough to notice. I will let the small things take the time they need. I will keep one hand on what matters and one hand open to what arrives."
+      ],
+      "hopeful": [
+        "Today I open the door to good things — quietly, without grasping. I make room for kindness, for ease, for unexpected light. Whatever comes, I am here for it."
+      ],
+      "powerful": [
+        "I stand in what is mine to stand in. My breath is steady. My voice is mine to use. I do not need to be smaller than I am."
+      ]
+    },
+    "Gratitude": {
+      "thankful": [
+        "Thank you for this morning. Thank you for the people I love, the ones I have lost, the ones I have not yet met. Thank you for what is hard and what is easy. Thank you, simply, for being here at all."
+      ],
+      "gentle": [
+        "For the warmth of a familiar voice. For the way the light falls on the wall in the afternoon. For the small mercies that arrive without being asked. Thank you."
+      ]
+    },
+    "Healing": {
+      "gentle": [
+        "May whatever needs to ease, ease. May the body be met with patience. May the heart be allowed its slow work. There is no schedule here. There is only this, and the next breath, and the next."
+      ],
+      "hopeful": [
+        "May the slow turn toward wellness continue. May the body and the heart find what they need. May the people who care be near in whatever way is right. May the morning bring something good."
+      ]
+    },
+    "Reflection": {
+      "gentle": [
+        "Let me look at this day without judgment. Let me see what was hard, what was kind, what was small and good. Let the day settle as it is. There is nothing here that needs fixing tonight."
+      ],
+      "surrendering": [
+        "I release what is not mine to carry. I release what cannot be solved tonight. I let the day be the day. I let myself be the one who is tired, the one who tried, the one who is here now."
+      ],
+      "grounded": [
+        "Here is what I know: I am breathing. My feet are on the floor. The day is doing what days do. I do not have to understand all of it. I only have to be here."
+      ]
+    },
+    "Custom": {
+      "gentle": [
+        "Whatever you have come here for — let it find a soft place. Let the words you do not yet have arrive in their own time. There is no rush. There is only this quiet, and the next breath, and you."
+      ]
+    }
+  }
+}
