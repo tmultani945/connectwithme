@@ -62,8 +62,18 @@ import java.security.MessageDigest
 import kotlin.coroutines.resume
 
 // Voice + chunking constants — keep in sync with the Worker default in wrangler.toml.
-private const val TTS_VOICE = "shimmer"
+private const val TTS_VOICE = "nova"
 private const val TTS_MODEL = "tts-1"
+// OpenAI TTS speed range: 0.25 (very slow) .. 4.0 (very fast). 1.0 is default.
+// 0.85 = ~15% slower; suits chant pacing without sounding sluggish.
+// Changing this value invalidates the on-device audio cache automatically
+// because TTS_SPEED is part of the cache key.
+private const val TTS_SPEED = 0.85f
+
+// How many lines ahead of the current one to keep downloaded.
+// 2 means: current + next + after-next are kept ready. As the user advances, a
+// new line at the front of the window starts downloading.
+private const val PREFETCH_WINDOW = 2
 
 // Chunking — short, bite-sized lines for "chant-along" pacing.
 private const val TARGET_WORDS = 12
@@ -142,39 +152,86 @@ class PracticeState internal constructor(
     // so the same line in two prayers shares the same audio. Survives across launches.
     private val cacheDir: File = File(appContext.cacheDir, "chant_audio").apply { mkdirs() }
 
+    // In-flight downloads keyed by cache key — lets speakCurrent() join an existing
+    // prefetch instead of starting a duplicate request.
+    private val inflight: MutableMap<String, Job> = mutableMapOf()
+
     fun setText(text: String) {
         cancelSpeak()
+        cancelPrefetch()
         sentences = segmentSentences(text)
         currentIndex = 0
         phase = PracticePhase.Idle
         lastError = null
     }
 
-    /** Speak the first line, then wait for user to tap Next. */
+    /** Speak the first line, then wait for user to tap Next.
+     *  Also kicks off background downloads of the next [PREFETCH_WINDOW] lines
+     *  so subsequent Next/Replay taps play instantly. The window slides on
+     *  every navigation call. */
     fun start() {
         if (sentences.isEmpty()) return
         currentIndex = 0
+        prefetchWindow()
         speakCurrent()
+    }
+
+    /** Fire-and-forget: ensure audio is downloading (or already cached) for
+     *  the current line plus the next [size] lines. Idempotent — already-cached
+     *  or in-flight sentences are skipped. Doesn't cancel out-of-window
+     *  downloads already in progress (they finish and stay in cache). */
+    private fun prefetchWindow(size: Int = PREFETCH_WINDOW) {
+        if (sentences.isEmpty()) return
+        val last = (currentIndex + size).coerceAtMost(sentences.lastIndex)
+        for (i in currentIndex..last) {
+            val sentence = sentences[i]
+            val key = cacheKey(sentence)
+            val file = File(cacheDir, "$key.mp3")
+            if (file.exists() && file.length() > 0) continue
+            val alreadyInflight = synchronized(inflight) { inflight.containsKey(key) }
+            if (alreadyInflight) continue
+
+            val job = scope.launch(Dispatchers.IO) {
+                try {
+                    downloadAudio(sentence, key)
+                } catch (_: Exception) { /* swallow — speakCurrent will retry */ }
+                finally {
+                    synchronized(inflight) { inflight.remove(key) }
+                }
+            }
+            synchronized(inflight) { inflight[key] = job }
+        }
+    }
+
+    private fun cancelPrefetch() {
+        synchronized(inflight) {
+            inflight.values.forEach { it.cancel() }
+            inflight.clear()
+        }
     }
 
     fun next() {
         if (!hasNext) return
         currentIndex++
+        prefetchWindow()
         speakCurrent()
     }
 
     fun previous() {
         if (!hasPrevious) return
         currentIndex--
+        prefetchWindow()
         speakCurrent()
     }
 
     fun replay() {
+        prefetchWindow()
         speakCurrent()
     }
 
     fun restart() {
         currentIndex = 0
+        prefetchWindow()
         speakCurrent()
     }
 
@@ -215,12 +272,28 @@ class PracticeState internal constructor(
         }
     }
 
-    private suspend fun ensureAudio(text: String): File? = withContext(Dispatchers.IO) {
+    private suspend fun ensureAudio(text: String): File? {
         val key = cacheKey(text)
         val file = File(cacheDir, "$key.mp3")
-        if (file.exists() && file.length() > 0) return@withContext file
+        if (file.exists() && file.length() > 0) return file
 
-        val tmp = File(cacheDir, "$key.tmp")
+        // If a prefetch is downloading this same line, wait for it to finish.
+        val existing = synchronized(inflight) { inflight[key] }
+        if (existing != null) {
+            existing.join()
+            return if (file.exists() && file.length() > 0) file else null
+        }
+
+        // No prefetch in flight — download synchronously now.
+        return withContext(Dispatchers.IO) { downloadAudio(text, key) }
+    }
+
+    /** Performs the actual HTTP POST + MP3 write. Returns the cached file or null. */
+    private fun downloadAudio(text: String, key: String): File? {
+        val file = File(cacheDir, "$key.mp3")
+        if (file.exists() && file.length() > 0) return file
+
+        val tmp = File(cacheDir, "$key-${System.nanoTime()}.tmp")
         val urlStr = BuildConfig.API_BASE_URL.trimEnd('/') + "/v1/speak"
 
         var conn: HttpURLConnection? = null
@@ -234,25 +307,25 @@ class PracticeState internal constructor(
                 setRequestProperty("Accept", "audio/mpeg, application/json")
             }
             conn.outputStream.use { out ->
-                val payload = """{"text":${jsonString(text)},"voice":"$TTS_VOICE","model":"$TTS_MODEL"}"""
+                val payload = """{"text":${jsonString(text)},"voice":"$TTS_VOICE","model":"$TTS_MODEL","speed":$TTS_SPEED}"""
                 out.write(payload.toByteArray(Charsets.UTF_8))
             }
             val code = conn.responseCode
             if (code !in 200..299) {
                 conn.errorStream?.bufferedReader()?.use { it.readText() }
-                return@withContext null
+                return null
             }
             conn.inputStream.use { input ->
                 tmp.outputStream().use { out -> input.copyTo(out) }
             }
-            if (!tmp.exists() || tmp.length() == 0L) return@withContext null
-            if (file.exists()) file.delete()
-            tmp.renameTo(file)
-            file
+            if (!tmp.exists() || tmp.length() == 0L) return null
+            // Only commit if no other parallel writer beat us — race-safe.
+            if (!file.exists()) tmp.renameTo(file)
+            return file
         } catch (e: IOException) {
-            null
+            return null
         } finally {
-            try { tmp.delete() } catch (_: Exception) {}
+            try { if (tmp.exists()) tmp.delete() } catch (_: Exception) {}
             conn?.disconnect()
         }
     }
@@ -301,7 +374,7 @@ class PracticeState internal constructor(
 
     private fun cacheKey(text: String): String {
         val md = MessageDigest.getInstance("SHA-1")
-        val input = "$TTS_VOICE|$TTS_MODEL|$text".toByteArray(Charsets.UTF_8)
+        val input = "$TTS_VOICE|$TTS_MODEL|$TTS_SPEED|$text".toByteArray(Charsets.UTF_8)
         return md.digest(input).joinToString("") { "%02x".format(it) }
     }
 

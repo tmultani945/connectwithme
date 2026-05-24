@@ -7,8 +7,8 @@ import com.sacredflow.app.core.analytics.AnalyticsEvent
 import com.sacredflow.app.domain.model.GenerationRequest
 import com.sacredflow.app.domain.model.GenerationResult
 import com.sacredflow.app.domain.model.Length
-import com.sacredflow.app.domain.model.Need
 import com.sacredflow.app.domain.model.Recipient
+import com.sacredflow.app.domain.model.UseCase
 import com.sacredflow.app.domain.usecase.CompleteOnboardingUseCase
 import com.sacredflow.app.ui.screen.generation.GenerationResultHolder
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,10 +40,6 @@ class OnboardingViewModel @Inject constructor(
 
     fun onAction(action: OnboardingAction) {
         when (action) {
-            is OnboardingAction.SetUseCase -> {
-                _state.update { it.copy(useCase = action.useCase) }
-                analytics.log(AnalyticsEvent.OnboardingStepCompleted("use_case"))
-            }
             is OnboardingAction.SetRecipient -> {
                 _state.update {
                     it.copy(
@@ -70,23 +66,16 @@ class OnboardingViewModel @Inject constructor(
                     )
                 }
             }
-            is OnboardingAction.ToggleNeed -> {
-                _state.update { current ->
-                    val next = current.needs.toMutableSet()
-                    if (action.need in next) next.remove(action.need)
-                    else {
-                        if (next.size >= Need.MAX_SELECTABLE) {
-                            // Deselect the oldest by Set iteration order.
-                            next.remove(next.first())
-                        }
-                        next.add(action.need)
-                    }
-                    current.copy(needs = next)
-                }
+            is OnboardingAction.SetTopic -> {
+                _state.update { it.copy(topic = action.text.take(OnboardingState.MAX_TOPIC_LENGTH)) }
+                analytics.log(AnalyticsEvent.OnboardingStepCompleted("topic"))
             }
             is OnboardingAction.SetTone -> {
                 _state.update { it.copy(tone = action.tone) }
                 analytics.log(AnalyticsEvent.OnboardingStepCompleted("tone"))
+            }
+            is OnboardingAction.SetUserName -> {
+                _state.update { it.copy(userName = action.text.take(OnboardingState.MAX_NAME_LENGTH)) }
             }
             is OnboardingAction.SetUserContext -> {
                 _state.update {
@@ -99,32 +88,46 @@ class OnboardingViewModel @Inject constructor(
 
     private fun submit() {
         val snapshot = _state.value
-        val useCase = snapshot.useCase ?: return
         val recipient = snapshot.recipient ?: return
         val tone = snapshot.tone ?: return
-        if (snapshot.needs.isEmpty()) return
+        if (snapshot.topic.isBlank()) return
 
         _state.update { it.copy(isSubmitting = true) }
         viewModelScope.launch {
+            // Mirror CreateViewModel: fold name + topic + extra context into the
+            // single `userContext` slot. The Worker parses these apart server-side.
+            val builtContext = buildString {
+                if (snapshot.userName.isNotBlank()) {
+                    append("My name is ${snapshot.userName.trim()}.")
+                }
+                if (snapshot.topic.isNotBlank()) {
+                    if (isNotEmpty()) append("\n")
+                    append("This is about: ${snapshot.topic.trim()}")
+                }
+                if (snapshot.userContext.isNotBlank()) {
+                    if (isNotEmpty()) append("\n")
+                    append(snapshot.userContext.trim())
+                }
+            }.takeIf { it.isNotBlank() }
+
             val result = completeOnboarding(
                 CompleteOnboardingUseCase.Input(
-                    useCase = useCase,
+                    useCase = UseCase.Prayer,
                     recipient = recipient,
-                    needs = snapshot.needs,
+                    needs = emptySet(),
                     tone = tone,
-                    userContext = snapshot.userContext.takeIf { it.isNotBlank() }
+                    userContext = builtContext
                 )
             )
 
-            // Store request + result for the Result screen.
             val request = GenerationRequest(
-                useCase = useCase.storageKey,
+                useCase = UseCase.Prayer.storageKey,
                 recipient = recipient.displayName,
                 recipientIsCustom = recipient.isCustom,
-                needs = snapshot.needs.map { it.storageKey },
+                needs = emptyList(),
                 tone = tone.storageKey,
                 length = Length.Medium.storageKey,
-                userContext = snapshot.userContext.takeIf { it.isNotBlank() }
+                userContext = builtContext
             )
             resultHolder.put(request, result)
 

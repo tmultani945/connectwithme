@@ -17,9 +17,12 @@ sealed interface ReminderAction {
     data class SetEnabled(val enabled: Boolean) : ReminderAction
     data class SetTime(val hour: Int, val minute: Int) : ReminderAction
     data class ToggleDay(val isoDay: Int) : ReminderAction
+    data class SetDays(val days: Set<Int>) : ReminderAction
     data class SetPermissionGranted(val granted: Boolean) : ReminderAction
     data object Save : ReminderAction
     data object Delete : ReminderAction
+    /** Fires a notification immediately so the user can verify permission + channel. */
+    data object TestNow : ReminderAction
 }
 
 sealed interface ReminderEvent {

@@ -101,6 +101,12 @@ class CreateViewModel @Inject constructor(
                     } else current.copy(length = target)
                 }
             }
+            is CreateAction.SetTopic -> _state.update {
+                it.copy(topic = action.text.take(CreateState.MAX_TOPIC_LENGTH))
+            }
+            is CreateAction.SetUserName -> _state.update {
+                it.copy(userName = action.text.take(CreateState.MAX_NAME_LENGTH))
+            }
             is CreateAction.SetUserContext -> _state.update {
                 it.copy(userContext = action.text.take(CreateState.MAX_CONTEXT_LENGTH))
             }
@@ -140,6 +146,21 @@ class CreateViewModel @Inject constructor(
         _state.update { it.copy(isSubmitting = true) }
 
         viewModelScope.launch {
+            // Compose userContext from the new freeform fields. Each part is on its own line
+            // so the LLM can parse them as separate facts even though they share one slot.
+            val builtContext = buildString {
+                if (snapshot.userName.isNotBlank()) {
+                    append("My name is ${snapshot.userName.trim()}.")
+                }
+                if (snapshot.topic.isNotBlank()) {
+                    if (isNotEmpty()) append("\n")
+                    append("This is about: ${snapshot.topic.trim()}")
+                }
+                if (snapshot.userContext.isNotBlank()) {
+                    if (isNotEmpty()) append("\n")
+                    append(snapshot.userContext.trim())
+                }
+            }
             val request = GenerationRequest(
                 useCase = snapshot.useCase.storageKey,
                 recipient = snapshot.recipient.displayName,
@@ -147,7 +168,7 @@ class CreateViewModel @Inject constructor(
                 needs = snapshot.needs.map { it.storageKey },
                 tone = snapshot.tone.storageKey,
                 length = snapshot.length.storageKey,
-                userContext = snapshot.userContext.takeIf { it.isNotBlank() }
+                userContext = builtContext.takeIf { it.isNotBlank() }
             )
             val result = generatePrayerUseCase(request)
             resultHolder.put(request, result)

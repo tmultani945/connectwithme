@@ -22,10 +22,9 @@ import com.sacredflow.app.ui.screen.home.HomeScreen
 import com.sacredflow.app.ui.screen.library.LibraryScreen
 import com.sacredflow.app.ui.screen.library.PrayerDetailScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingContextScreen
-import com.sacredflow.app.ui.screen.onboarding.OnboardingNeedScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingRecipientScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingToneScreen
-import com.sacredflow.app.ui.screen.onboarding.OnboardingUseCaseScreen
+import com.sacredflow.app.ui.screen.onboarding.OnboardingTopicScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingWelcomeScreen
 import com.sacredflow.app.ui.screen.paywall.PaywallScreen
 import com.sacredflow.app.ui.screen.reminder.ReminderScreen
@@ -79,25 +78,18 @@ fun SacredFlowNavHost(navController: NavHostController) {
             navigation<OnboardingGraph>(startDestination = OnboardingWelcomeRoute) {
                 composable<OnboardingWelcomeRoute> {
                     OnboardingWelcomeScreen(
-                        onNext = { navController.navigate(OnboardingUseCaseRoute) }
-                    )
-                }
-                composable<OnboardingUseCaseRoute> {
-                    OnboardingUseCaseScreen(
-                        navController = navController,
-                        onNext = { navController.navigate(OnboardingRecipientRoute) },
-                        onBack = { navController.popBackStack() }
+                        onNext = { navController.navigate(OnboardingRecipientRoute) }
                     )
                 }
                 composable<OnboardingRecipientRoute> {
                     OnboardingRecipientScreen(
                         navController = navController,
-                        onNext = { navController.navigate(OnboardingNeedRoute) },
+                        onNext = { navController.navigate(OnboardingTopicRoute) },
                         onBack = { navController.popBackStack() }
                     )
                 }
-                composable<OnboardingNeedRoute> {
-                    OnboardingNeedScreen(
+                composable<OnboardingTopicRoute> {
+                    OnboardingTopicScreen(
                         navController = navController,
                         onNext = { navController.navigate(OnboardingToneRoute) },
                         onBack = { navController.popBackStack() }

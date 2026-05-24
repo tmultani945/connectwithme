@@ -96,7 +96,7 @@ fun PaywallScreen(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
@@ -110,23 +110,30 @@ fun PaywallScreen(
                 )
                 .sacredPaper(density = 0.5f)
         ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+            // ── Top bar — just the close X, always tappable, never scrolled past ──
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.Close, contentDescription = "Close", tint = palette.ink2)
+                IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Close", tint = palette.ink2)
+                }
             }
 
+            // ── Scrollable body ──
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 28.dp)
-                    .padding(top = 60.dp, bottom = 140.dp),
+                    .padding(horizontal = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Asterism(size = 10.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Keep the practice flowing.",
                     style = MaterialTheme.typography.displayLarge,
@@ -165,13 +172,16 @@ fun PaywallScreen(
                     selected = state.selectedProductId == BillingProducts.SACRED_FLOW_PLUS_MONTHLY,
                     onClick = { viewModel.onAction(PaywallAction.SelectProduct(BillingProducts.SACRED_FLOW_PLUS_MONTHLY)) }
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // ── Pinned bottom action area — its own slot below the scroll, no overlap ──
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp)
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.92f))
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 PrimaryButton(
                     text = if (state.isSubscribed) "Manage subscription" else "Start Connect Yourself Plus",
@@ -179,7 +189,7 @@ fun PaywallScreen(
                     enabled = !state.isPurchaseInFlight && !state.isSubscribed,
                     isLoading = state.isPurchaseInFlight
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 TextButton(
                     onClick = { viewModel.onAction(PaywallAction.Restore) },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -192,7 +202,7 @@ fun PaywallScreen(
                     color = palette.ink3,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(top = 4.dp)
+                        .padding(top = 2.dp, bottom = 4.dp)
                 )
             }
         }

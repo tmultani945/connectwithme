@@ -6,6 +6,7 @@ import com.sacredflow.app.data.local.entity.Reminder
 import com.sacredflow.app.data.repository.ReminderRepository
 import com.sacredflow.app.domain.usecase.CancelReminderUseCase
 import com.sacredflow.app.domain.usecase.ScheduleReminderUseCase
+import com.sacredflow.app.reminder.ReminderNotificationBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ import javax.inject.Inject
 class ReminderViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val scheduleReminderUseCase: ScheduleReminderUseCase,
-    private val cancelReminderUseCase: CancelReminderUseCase
+    private val cancelReminderUseCase: CancelReminderUseCase,
+    private val notificationBuilder: ReminderNotificationBuilder
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReminderState())
@@ -58,11 +60,33 @@ class ReminderViewModel @Inject constructor(
                 if (action.isoDay in next) next.remove(action.isoDay) else next.add(action.isoDay)
                 current.copy(daysOfWeek = next)
             }
+            is ReminderAction.SetDays -> _state.update { it.copy(daysOfWeek = action.days) }
             is ReminderAction.SetPermissionGranted -> _state.update {
                 it.copy(needsNotificationPermission = !action.granted)
             }
             ReminderAction.Save -> save()
             ReminderAction.Delete -> delete()
+            ReminderAction.TestNow -> testNow()
+        }
+    }
+
+    /** Posts a notification immediately so the user can verify the channel +
+     *  POST_NOTIFICATIONS permission without waiting for the scheduled time. */
+    private fun testNow() {
+        val snapshot = _state.value
+        if (snapshot.needsNotificationPermission) {
+            viewModelScope.launch {
+                _events.send(ReminderEvent.ShowSnackbar(
+                    "Allow notifications first — tap Save to grant permission."
+                ))
+            }
+            return
+        }
+        // Use a stable test id; reuses the existing reminder slot if there is one.
+        val id = snapshot.existingId ?: 1L
+        notificationBuilder.post(id)
+        viewModelScope.launch {
+            _events.send(ReminderEvent.ShowSnackbar("Test notification sent."))
         }
     }
 

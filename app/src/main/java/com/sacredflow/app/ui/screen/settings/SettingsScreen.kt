@@ -104,30 +104,6 @@ fun SettingsScreen(
                     }
                 }
 
-                item { SectionHeader("Practice") }
-                item {
-                    SettingsRow(
-                        title = "Default address",
-                        subtitle = state.defaultRecipient,
-                        onClick = { }
-                    )
-                }
-                item {
-                    SettingsRow(
-                        title = "Default tone",
-                        subtitle = state.defaultTone.replaceFirstChar { it.uppercase() },
-                        onClick = { }
-                    )
-                }
-                item {
-                    SettingsRow(
-                        title = "Default type",
-                        subtitle = state.defaultUseCase,
-                        onClick = { }
-                    )
-                }
-
-                item { Spacer(modifier = Modifier.height(16.dp)) }
                 item { SectionHeader("Appearance") }
                 item {
                     SettingsRow(

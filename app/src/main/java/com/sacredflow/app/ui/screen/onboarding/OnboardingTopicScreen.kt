@@ -1,30 +1,32 @@
 package com.sacredflow.app.ui.screen.onboarding
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -33,34 +35,34 @@ import com.sacredflow.app.ui.components.PrimaryButton
 import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
+import com.sacredflow.app.ui.theme.PillShape
+
+private val TOPIC_SUGGESTIONS: List<String> = listOf(
+    "Success in my work today",
+    "Abundance and prosperity",
+    "My child's recovery",
+    "Healing a relationship",
+    "Strength in hardship",
+    "Letting go of fear",
+    "A clear decision",
+    "Peace before sleep"
+)
 
 @Composable
-fun OnboardingContextScreen(
+fun OnboardingTopicScreen(
     navController: NavController,
-    onGenerate: () -> Unit,
-    onBack: () -> Unit,
-    onCrisisResources: () -> Unit
+    onNext: () -> Unit,
+    onBack: () -> Unit
 ) {
     val viewModel = sharedOnboardingViewModel(navController)
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
     val palette = LocalSacredPalette.current
     val typo = LocalSacredTypography.current
-
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            when (event) {
-                is OnboardingEvent.NavigateToResult -> onGenerate()
-                OnboardingEvent.NavigateToCrisisResources -> onCrisisResources()
-                is OnboardingEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
-            }
-        }
-    }
+    val suggestionsState = rememberLazyListState()
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(onBack = onBack, sub = "step 4 of 4") },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        topBar = { BackTopBar(onBack = onBack, sub = "step 2 of 4") }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -71,46 +73,48 @@ fun OnboardingContextScreen(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Text(
-                    text = "A few last things",
+                    text = "What is this about?",
                     style = MaterialTheme.typography.displayMedium,
                     color = palette.primaryInk
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "All optional.",
+                    text = "The topic, in your words.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = palette.ink2
                 )
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                    // ── Name ──
-                    Text("YOUR NAME", style = typo.overline, color = palette.ink3)
+                    Text("TRY ONE", style = typo.overline, color = palette.ink3)
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = state.userName,
-                        onValueChange = { viewModel.onAction(OnboardingAction.SetUserName(it)) },
-                        placeholder = { Text("So the prayer can address you", color = palette.ink3) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    LazyRow(
+                        state = suggestionsState,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(end = 8.dp)
+                    ) {
+                        items(TOPIC_SUGGESTIONS) { suggestion ->
+                            SuggestionChip(
+                                label = suggestion,
+                                selected = state.topic == suggestion,
+                                onClick = { viewModel.onAction(OnboardingAction.SetTopic(suggestion)) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // ── Anything specific ──
-                    Text("ANYTHING SPECIFIC", style = typo.overline, color = palette.ink3)
-                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
-                        value = state.userContext,
-                        onValueChange = { viewModel.onAction(OnboardingAction.SetUserContext(it)) },
+                        value = state.topic,
+                        onValueChange = { viewModel.onAction(OnboardingAction.SetTopic(it)) },
                         placeholder = {
                             Text(
-                                "e.g., this is for my grandmother\nstarting a new job tomorrow",
-                                color = palette.ink3.copy(alpha = 0.7f)
+                                "Write in your own words…",
+                                color = palette.ink3,
+                                style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic)
                             )
                         },
-                        minLines = 4,
-                        maxLines = 7,
+                        minLines = 3,
+                        maxLines = 5,
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -119,40 +123,47 @@ fun OnboardingContextScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Stays on your device unless you save it.",
+                            text = "Be as specific or open as you like.",
                             style = MaterialTheme.typography.bodySmall,
                             color = palette.ink3
                         )
                         Text(
-                            text = "${state.userContext.length} / ${OnboardingState.MAX_CONTEXT_LENGTH}",
+                            text = "${state.topic.length} / ${OnboardingState.MAX_TOPIC_LENGTH}",
                             style = MaterialTheme.typography.bodySmall,
                             color = palette.ink3
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 PrimaryButton(
-                    text = "Create my first reflection",
-                    onClick = { viewModel.onAction(OnboardingAction.Submit) },
-                    enabled = state.isContextValid && !state.isSubmitting,
-                    isLoading = state.isSubmitting,
-                    modifier = Modifier.fillMaxWidth()
+                    text = "Continue",
+                    onClick = onNext,
+                    enabled = state.canContinueFromTopic,
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                TextButton(
-                    onClick = {
-                        viewModel.onAction(OnboardingAction.SetUserName(""))
-                        viewModel.onAction(OnboardingAction.SetUserContext(""))
-                        viewModel.onAction(OnboardingAction.Submit)
-                    },
-                    enabled = !state.isSubmitting,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                ) {
-                    Text("Skip — just generate", style = MaterialTheme.typography.titleMedium, color = palette.ink3)
-                }
             }
         }
+    }
+}
+
+@Composable
+private fun SuggestionChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val palette = LocalSacredPalette.current
+    Box(
+        modifier = Modifier
+            .height(36.dp)
+            .clickable { onClick() }
+            .background(
+                if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface,
+                PillShape
+            )
+            .padding(horizontal = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) palette.primaryInk else palette.ink2
+        )
     }
 }

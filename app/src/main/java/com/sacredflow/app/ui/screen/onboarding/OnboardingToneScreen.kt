@@ -41,7 +41,7 @@ fun OnboardingToneScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(onBack = onBack, sub = "step 4 of 6") }
+        topBar = { BackTopBar(onBack = onBack, sub = "step 3 of 4") }
     ) { padding ->
         Box(
             modifier = Modifier

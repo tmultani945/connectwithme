@@ -1,40 +1,45 @@
 package com.sacredflow.app.ui.screen.onboarding
 
-import com.sacredflow.app.domain.model.Need
 import com.sacredflow.app.domain.model.Recipient
 import com.sacredflow.app.domain.model.Tone
-import com.sacredflow.app.domain.model.UseCase
 
 data class OnboardingState(
-    val useCase: UseCase? = null,
     val recipient: Recipient? = null,
     val customRecipientDraft: String = "",
     val isCustomRecipientMode: Boolean = false,
-    val needs: Set<Need> = emptySet(),
+    val topic: String = "",
     val tone: Tone? = null,
+    val userName: String = "",
     val userContext: String = "",
     val isSubmitting: Boolean = false
 ) {
-    val canContinueFromUseCase: Boolean get() = useCase != null
     val canContinueFromRecipient: Boolean
         get() = if (isCustomRecipientMode) customRecipientDraft.trim().isNotEmpty()
         else recipient != null && !recipient.isCustom
-    val canContinueFromNeed: Boolean get() = needs.isNotEmpty()
+
+    val canContinueFromTopic: Boolean
+        get() = topic.trim().isNotEmpty() && topic.length <= MAX_TOPIC_LENGTH
+
     val canContinueFromTone: Boolean get() = tone != null
-    val isContextValid: Boolean get() = userContext.length <= MAX_CONTEXT_LENGTH
+
+    val isContextValid: Boolean
+        get() = userContext.length <= MAX_CONTEXT_LENGTH &&
+            userName.length <= MAX_NAME_LENGTH
 
     companion object {
         const val MAX_CONTEXT_LENGTH = 280
+        const val MAX_TOPIC_LENGTH = 140
+        const val MAX_NAME_LENGTH = 40
     }
 }
 
 sealed interface OnboardingAction {
-    data class SetUseCase(val useCase: UseCase) : OnboardingAction
     data class SetRecipient(val recipient: Recipient) : OnboardingAction
     data class EnableCustomRecipientMode(val enabled: Boolean) : OnboardingAction
     data class SetCustomRecipientDraft(val draft: String) : OnboardingAction
-    data class ToggleNeed(val need: Need) : OnboardingAction
+    data class SetTopic(val text: String) : OnboardingAction
     data class SetTone(val tone: Tone) : OnboardingAction
+    data class SetUserName(val text: String) : OnboardingAction
     data class SetUserContext(val text: String) : OnboardingAction
     data object Submit : OnboardingAction
 }

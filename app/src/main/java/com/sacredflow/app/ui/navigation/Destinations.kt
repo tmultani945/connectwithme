@@ -4,12 +4,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable object SplashRoute
 
-// Onboarding nested graph
+// Onboarding nested graph — synced with the 4-step Create flow:
+//   Welcome → Recipient → Topic → Tone → Context (name + extra)
 @Serializable object OnboardingGraph
 @Serializable object OnboardingWelcomeRoute
-@Serializable object OnboardingUseCaseRoute
 @Serializable object OnboardingRecipientRoute
-@Serializable object OnboardingNeedRoute
+@Serializable object OnboardingTopicRoute
 @Serializable object OnboardingToneRoute
 @Serializable object OnboardingContextRoute
 

@@ -6,7 +6,7 @@ compatibility_date = "2025-01-15"
 [vars]
 ANTHROPIC_MODEL = "claude-sonnet-4-6"
 OPENAI_TTS_MODEL = "tts-1"
-OPENAI_TTS_VOICE = "shimmer"
+OPENAI_TTS_VOICE = "nova"
 
 # Secrets — set via wrangler secret put:
 #   wrangler secret put ANTHROPIC_API_KEY

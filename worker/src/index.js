@@ -4,39 +4,96 @@ const LENGTH_TARGETS = {
   long:   { words: "220–320 words",  max_tokens: 1100 },
 };
 
-const SYSTEM_PROMPT = `You are Sacred Flow, a belief-neutral companion that writes short personalized prayers, intentions, and reflections.
+const SYSTEM_PROMPT = `You write prayers, intentions, and reflections that the user speaks in their own voice.
 
-Rules:
-- Match the requested tone exactly. The tone is the emotional register; do not contradict it.
-- Hit the requested length window. Count words mentally before finalizing.
-- Belief-neutral: do not assume any specific religion, deity, or doctrine unless the user clearly invokes one in their own words. Use second-person ("you", "may you") or first-person ("I", "let me") framing by default. Avoid "God", "Allah", "the universe", "spirit" unless the user's text uses them first.
-- Output plain text only. No markdown, no headings, no bullets, no quotation marks around the whole thing, no preamble like "Here is a prayer". Start directly with the first word of the prayer.
-- Do not address the user by name unless they provide one.
-- Do not give medical, legal, financial, or crisis advice. If the request describes self-harm, suicide, or someone in immediate danger, refuse gently and recommend reaching a professional or local emergency line.
-- Be specific to the recipient and need; avoid generic platitudes.`;
+# VOICE — non-negotiable
+
+The user IS the speaker. Write in the user's first-person voice ("I", "me", "my"; "we", "our" if appropriate). The user is talking DIRECTLY to the recipient they chose (God, Universe, Higher Self, Ancestors, Nature, or a custom recipient). The recipient is addressed as "you" (when addressed) or by name.
+
+Never narrate about the user in third person. The user IS the one praying — they are not a subject being prayed for by an external narrator.
+
+If the user provides their name, the speaker uses it for self-introduction, sparingly, near the opening. The narrator never refers to the user by name.
+
+# Examples — study these
+
+WRONG (third-person narration about the user):
+"God, as Taranpreet steps into this day's work, may Your gentle presence move through every task..."
+"Universe, hold Anya in her grief tonight. Let her find rest..."
+
+RIGHT (the user speaking their own prayer):
+"God, I step into this day's work. Be near me as I move through every task..."
+"Universe, I, Taranpreet, come to you with the work in my hands today..."
+"Universe, I am holding grief tonight. Hold me where I cannot hold myself..."
+
+# Structure — every output follows this arc
+
+1. Address the recipient at the start. Just the name + comma, e.g., "God,", "Universe,", or the custom name the user chose.
+2. State the situation in first person — what the speaker is carrying, facing, hoping for, mourning, beginning.
+3. Ask directly for what is needed — strength, relief, clarity, courage, peace, guidance, presence. The request is the speaker's own ("be with me", "let me", "give me", "show me"), not a third-party petition ("be with them", "let her").
+4. Close quietly. A short, grounded line. Not flowery. Not desperate. Often a single short sentence that settles the prayer.
+
+# Tone
+
+Match the requested tone exactly. Tone is the emotional register — gentle, hopeful, thankful, grounded, powerful, surrendering. Do not contradict it. Do not soften a "powerful" prayer into mildness, or harden a "gentle" one.
+
+# Length
+
+Hit the requested word window. Count words mentally before finalizing.
+
+# Recipient handling
+
+Use only the recipient name the user chose. Do not introduce other deities, scriptures, or traditions. If the recipient is "Universe", the prayer is to the Universe — do not slip "God" in anywhere. Same for "Higher Self", "Ancestors", or any custom recipient. The custom recipient name appears verbatim.
+
+# Output
+
+Plain text only. No markdown, no headings, no bullet points, no quotation marks around the whole thing, no preamble like "Here is a prayer". Start directly with the recipient address or the first word of the body.
+
+# Safety
+
+Do not give medical, legal, financial, or crisis advice. If the user's input describes self-harm, suicide, or immediate danger, refuse gently and recommend reaching a professional or local emergency line.`;
 
 function buildUserPrompt(payload, isRegeneration) {
   const tgt = LENGTH_TARGETS[payload.length] || LENGTH_TARGETS.medium;
-  const needs = (payload.needs || []).join(", ") || "(none specified)";
   const recipient = payload.recipientIsCustom
-    ? `a custom recipient described as: "${payload.recipient}"`
+    ? `the speaker's chosen recipient — "${payload.recipient}"`
     : payload.recipient;
-  const ctx = payload.userContext && payload.userContext.trim();
+
+  // The Android client folds the speaker's name and topic into userContext, prefixed:
+  //   "My name is X."        — first line if name given
+  //   "This is about: Y"     — second line if topic given
+  //   (anything else)        — remaining lines
+  // Pull them apart for a clearer prompt; the model needs to know what's WHO vs. WHAT.
+  const ctx = (payload.userContext || "").trim();
+  let speakerName = null;
+  let topic = null;
+  let extra = null;
+  if (ctx) {
+    const lines = ctx.split("\n").map((l) => l.trim()).filter(Boolean);
+    const remaining = [];
+    for (const line of lines) {
+      const nameMatch = line.match(/^My name is (.+?)\.?$/i);
+      const topicMatch = line.match(/^This is about:\s*(.+)$/i);
+      if (nameMatch && !speakerName) speakerName = nameMatch[1].trim();
+      else if (topicMatch && !topic) topic = topicMatch[1].trim();
+      else remaining.push(line);
+    }
+    if (remaining.length) extra = remaining.join("\n");
+  }
+
   const regen = isRegeneration
-    ? "\nThis is a REGENERATION — produce a meaningfully different result than a typical first attempt: different opening image, different rhythm, different closing line."
+    ? "\nThis is a REGENERATION. Produce a meaningfully different prayer than a typical first attempt — different opening image, different rhythm, different closing line. Same speaker, same recipient, same arc, same tone."
     : "";
 
   return [
-    `Use case: ${payload.useCase}`,
-    `Recipient: ${recipient}`,
+    `Speaker (the person praying): ${speakerName || "(unnamed — do not invent a name)"}`,
+    `Speaker addresses: ${recipient}`,
+    topic ? `What the speaker wants to pray about: ${topic}` : null,
+    extra ? `Additional context from the speaker:\n${extra}` : null,
     `Tone: ${payload.tone}`,
-    `Length target: ${tgt.words}`,
-    `Needs / themes: ${needs}`,
-    `Locale: ${payload.locale || "en-US"}`,
-    ctx ? `User context: ${ctx}` : null,
+    `Target length: ${tgt.words}`,
     regen,
     "",
-    "Write the prayer/intention/reflection now. Plain text only.",
+    `Write the prayer in the speaker's first-person voice, speaking directly to ${payload.recipient}. Follow the arc: address → state the situation in first person → ask directly for what is needed → quiet close. Plain text only. Begin with the recipient address ("${payload.recipient},").`,
   ].filter(Boolean).join("\n");
 }
 
@@ -191,8 +248,9 @@ async function handleSpeak(req, env) {
 
   const model = body.model || env.OPENAI_TTS_MODEL || "tts-1";
   const voice = body.voice || env.OPENAI_TTS_VOICE || "shimmer";
-  // Slower-than-default delivery suits prayer / chant pacing. 0.85 is the sweet spot.
-  const speed = Number.isFinite(body.speed) ? body.speed : 0.95;
+  // Slower-than-default delivery suits prayer / chant pacing.
+  // Client always sends an explicit speed; this fallback is only for direct API tests.
+  const speed = Number.isFinite(body.speed) ? body.speed : 0.85;
 
   let openaiResp;
   try {

@@ -43,7 +43,7 @@ fun OnboardingRecipientScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(onBack = onBack, sub = "step 2 of 6") }
+        topBar = { BackTopBar(onBack = onBack, sub = "step 1 of 4") }
     ) { padding ->
         Box(
             modifier = Modifier

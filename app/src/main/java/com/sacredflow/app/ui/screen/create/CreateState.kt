@@ -7,11 +7,16 @@ import com.sacredflow.app.domain.model.Tone
 import com.sacredflow.app.domain.model.UseCase
 
 data class CreateState(
-    val useCase: UseCase = UseCase.Reflection,
+    val useCase: UseCase = UseCase.Prayer,
     val recipient: Recipient = Recipient.BuiltIn("Universe"),
     val customRecipientDraft: String = "",
     val isCustomRecipientMode: Boolean = false,
     val customRecipientChoices: List<String> = emptyList(),
+    // Replaces structured Need selection — a freeform topic the user wants to be addressed.
+    val topic: String = "",
+    // Optional — folded into the prompt so the AI can address the user by name.
+    val userName: String = "",
+    // Legacy field kept for backward compat; the new flow doesn't surface a multi-needs picker.
     val needs: Set<Need> = emptySet(),
     val tone: Tone = Tone.Gentle,
     val length: Length = Length.Medium,
@@ -24,9 +29,12 @@ data class CreateState(
 ) {
     val isValid: Boolean
         get() {
-            val recipientOk = if (isCustomRecipientMode) customRecipientDraft.isNotBlank()
-            else true
-            return needs.isNotEmpty() && userContext.length <= MAX_CONTEXT_LENGTH && recipientOk
+            val recipientOk = if (isCustomRecipientMode) customRecipientDraft.isNotBlank() else true
+            return recipientOk &&
+                topic.isNotBlank() &&
+                topic.length <= MAX_TOPIC_LENGTH &&
+                userContext.length <= MAX_CONTEXT_LENGTH &&
+                userName.length <= MAX_NAME_LENGTH
         }
 
     val canSelectLong: Boolean get() = isPlusUser
@@ -36,6 +44,8 @@ data class CreateState(
 
     companion object {
         const val MAX_CONTEXT_LENGTH = 280
+        const val MAX_TOPIC_LENGTH = 140
+        const val MAX_NAME_LENGTH = 40
     }
 }
 
@@ -47,6 +57,8 @@ sealed interface CreateAction {
     data class ToggleNeed(val value: Need) : CreateAction
     data class SetTone(val value: Tone) : CreateAction
     data class SetLength(val value: Length) : CreateAction
+    data class SetTopic(val text: String) : CreateAction
+    data class SetUserName(val text: String) : CreateAction
     data class SetUserContext(val text: String) : CreateAction
     data object ToggleContextExpanded : CreateAction
     data object Submit : CreateAction
