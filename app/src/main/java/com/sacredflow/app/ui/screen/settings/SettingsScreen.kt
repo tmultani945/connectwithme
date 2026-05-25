@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sacredflow.app.domain.model.Voice
 import com.sacredflow.app.ui.components.HairlineWithDot
 import com.sacredflow.app.ui.components.SectionHeader
 import com.sacredflow.app.ui.components.sacredPaper
@@ -52,13 +53,17 @@ import com.sacredflow.app.ui.theme.ThemeMode
 fun SettingsScreen(
     onOpenPaywall: () -> Unit,
     onOpenHelp: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenTerms: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showThemeSheet by remember { mutableStateOf(false) }
+    var showVoiceSheet by remember { mutableStateOf(false) }
     val themeSheetState = rememberModalBottomSheetState()
+    val voiceSheetState = rememberModalBottomSheetState()
     val palette = LocalSacredPalette.current
     val typo = LocalSacredTypography.current
 
@@ -133,6 +138,21 @@ fun SettingsScreen(
                     HairlineWithDot()
                     Spacer(modifier = Modifier.height(20.dp))
                 }
+                item { SectionHeader("Speak after me") }
+                item {
+                    val currentVoice = Voice.fromKey(state.voiceKey)
+                    SettingsRow(
+                        title = "Voice",
+                        subtitle = "${currentVoice.displayName} — ${currentVoice.descriptor}",
+                        onClick = { showVoiceSheet = true }
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HairlineWithDot()
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
                 item { SectionHeader("Subscription") }
                 item {
                     SettingsRow(
@@ -167,7 +187,13 @@ fun SettingsScreen(
                 item {
                     SettingsRow(
                         title = "Privacy policy",
-                        onClick = { viewModel.onAction(SettingsAction.RequestClearData) }
+                        onClick = onOpenPrivacy
+                    )
+                }
+                item {
+                    SettingsRow(
+                        title = "Terms of use",
+                        onClick = onOpenTerms
                     )
                 }
                 item {
@@ -223,6 +249,82 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = palette.ink
                             )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
+
+        if (showVoiceSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showVoiceSheet = false },
+                sheetState = voiceSheetState,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        "Voice",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = palette.primaryInk
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Who reads your reflection aloud.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.ink3
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Voice.entries.forEach { voice ->
+                        val locked = voice.isPlusOnly && !state.isPlusSubscriber
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = !locked) {
+                                    if (!locked) {
+                                        viewModel.onAction(SettingsAction.SetVoice(voice.storageKey))
+                                        showVoiceSheet = false
+                                    } else {
+                                        showVoiceSheet = false
+                                        onOpenPaywall()
+                                    }
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = state.voiceKey == voice.storageKey,
+                                enabled = !locked,
+                                onClick = {
+                                    if (!locked) {
+                                        viewModel.onAction(SettingsAction.SetVoice(voice.storageKey))
+                                        showVoiceSheet = false
+                                    } else {
+                                        showVoiceSheet = false
+                                        onOpenPaywall()
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = voice.displayName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = if (locked) palette.ink3 else palette.ink
+                                )
+                                Text(
+                                    text = voice.descriptor,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.ink3
+                                )
+                            }
+                            if (locked) {
+                                Text(
+                                    text = "PLUS",
+                                    style = typo.overline,
+                                    color = palette.primaryInk
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))

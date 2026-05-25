@@ -13,12 +13,14 @@ data class SettingsState(
     val totalSavedCount: Int = 0,
     val appVersion: String = BuildConfig.VERSION_NAME,
     val showThemePicker: Boolean = false,
-    val showClearDataConfirm: Boolean = false
+    val showClearDataConfirm: Boolean = false,
+    val voiceKey: String = "nova"
 )
 
 sealed interface SettingsAction {
     data class SetThemeMode(val mode: ThemeMode) : SettingsAction
     data class SetUseDynamicColor(val use: Boolean) : SettingsAction
+    data class SetVoice(val key: String) : SettingsAction
     data object OpenThemePicker : SettingsAction
     data object CloseThemePicker : SettingsAction
     data object RequestClearData : SettingsAction

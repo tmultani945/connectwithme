@@ -36,17 +36,7 @@ import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
 import com.sacredflow.app.ui.theme.PillShape
-
-private val TOPIC_SUGGESTIONS: List<String> = listOf(
-    "Success in my work today",
-    "Abundance and prosperity",
-    "My child's recovery",
-    "Healing a relationship",
-    "Strength in hardship",
-    "Letting go of fear",
-    "A clear decision",
-    "Peace before sleep"
-)
+import com.sacredflow.app.ui.util.TopicSuggestions as TOPIC_SUGGESTIONS
 
 @Composable
 fun OnboardingTopicScreen(

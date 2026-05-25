@@ -8,7 +8,9 @@ data class PrayerDetailState(
     val noteDraft: String = "",
     val isEditingNote: Boolean = false,
     val showDeleteConfirm: Boolean = false,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    /** OpenAI TTS voice key for Speak after me; loaded from user prefs. */
+    val voiceKey: String = "nova"
 )
 
 sealed interface PrayerDetailAction {
@@ -19,6 +21,7 @@ sealed interface PrayerDetailAction {
     data object SaveNote : PrayerDetailAction
     data object Share : PrayerDetailAction
     data object Copy : PrayerDetailAction
+    data class SetLanded(val key: String?) : PrayerDetailAction
     data object RequestDelete : PrayerDetailAction
     data object CancelDelete : PrayerDetailAction
     data object ConfirmDelete : PrayerDetailAction

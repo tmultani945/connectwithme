@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.sacredflow.app.data.local.AppDatabase
 import com.sacredflow.app.data.local.dao.FavoriteDao
 import com.sacredflow.app.data.local.dao.GenerationHistoryDao
+import com.sacredflow.app.data.local.dao.MoodDao
 import com.sacredflow.app.data.local.dao.PrayerEntryDao
 import com.sacredflow.app.data.local.dao.ReminderDao
 import com.sacredflow.app.data.local.dao.TemplateDao
@@ -28,7 +29,13 @@ object DatabaseModule {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
-            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .addMigrations(
+                AppDatabase.MIGRATION_1_2,
+                AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4,
+                AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6
+            )
             .build()
 
     @Provides fun providePrayerEntryDao(db: AppDatabase): PrayerEntryDao = db.prayerEntryDao()
@@ -38,4 +45,5 @@ object DatabaseModule {
     @Provides fun provideFavoriteDao(db: AppDatabase): FavoriteDao = db.favoriteDao()
     @Provides fun provideGenerationHistoryDao(db: AppDatabase): GenerationHistoryDao =
         db.generationHistoryDao()
+    @Provides fun provideMoodDao(db: AppDatabase): MoodDao = db.moodDao()
 }

@@ -1,6 +1,7 @@
 package com.sacredflow.app.ui.screen.create
 
 import com.sacredflow.app.domain.model.Length
+import com.sacredflow.app.domain.model.Mood
 import com.sacredflow.app.domain.model.Need
 import com.sacredflow.app.domain.model.Recipient
 import com.sacredflow.app.domain.model.Tone
@@ -25,7 +26,10 @@ data class CreateState(
     val isSubmitting: Boolean = false,
     val isPlusUser: Boolean = false,
     val remainingFreeToday: Int? = null,
-    val isPrefilled: Boolean = false
+    val isPrefilled: Boolean = false,
+    /** Optional mood selected on the Quick Start panel. When set, its descriptor
+     *  is folded into the prompt and a MoodEntry is recorded on successful submit. */
+    val mood: Mood? = null
 ) {
     // Topic is OPTIONAL — the quick path can submit with no topic; the worker
     // prompt treats topic as a "what the speaker wants to pray about" hint and
@@ -62,6 +66,7 @@ sealed interface CreateAction {
     data class SetTopic(val text: String) : CreateAction
     data class SetUserName(val text: String) : CreateAction
     data class SetUserContext(val text: String) : CreateAction
+    data class SetMood(val value: Mood?) : CreateAction
     data object ToggleContextExpanded : CreateAction
     data object Submit : CreateAction
     data object ResetToDefaults : CreateAction

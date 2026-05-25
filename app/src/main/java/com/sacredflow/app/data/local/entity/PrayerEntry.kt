@@ -25,5 +25,9 @@ data class PrayerEntry(
     val createdAt: Long,
     val updatedAt: Long,
     val viewCount: Int = 0,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    /** User's reflection on how this prayer landed — one of "steady", "okay",
+     *  "missed", or null if they haven't responded. Set by the LandedPicker on
+     *  the Result and PrayerDetail screens. */
+    val landed: String? = null
 )

@@ -45,7 +45,8 @@ class SettingsViewModel @Inject constructor(
             useDynamicColor = useDynamic,
             isPlusSubscriber = (billing as? BillingState.Ready)?.isSubscribed == true
                     || prefs.isPlusSubscriber,
-            totalSavedCount = count
+            totalSavedCount = count,
+            voiceKey = prefs.voiceKey
         )
     }.stateIn(
         scope = viewModelScope,
@@ -60,6 +61,9 @@ class SettingsViewModel @Inject constructor(
             }
             is SettingsAction.SetUseDynamicColor -> viewModelScope.launch {
                 dataStore.setUseDynamicColor(action.use)
+            }
+            is SettingsAction.SetVoice -> viewModelScope.launch {
+                updatePreferences.setVoiceKey(action.key)
             }
             SettingsAction.OpenThemePicker, SettingsAction.CloseThemePicker -> Unit
             SettingsAction.RequestClearData -> Unit

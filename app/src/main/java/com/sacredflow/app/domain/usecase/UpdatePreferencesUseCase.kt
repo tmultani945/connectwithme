@@ -19,4 +19,8 @@ class UpdatePreferencesUseCase @Inject constructor(
     suspend fun addCustomRecipient(name: String) {
         preferenceRepository.addCustomRecipient(name)
     }
+
+    suspend fun setVoiceKey(key: String) {
+        preferenceRepository.update { it.copy(voiceKey = key) }
+    }
 }

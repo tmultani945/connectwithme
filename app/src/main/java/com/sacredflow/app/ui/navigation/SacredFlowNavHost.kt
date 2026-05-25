@@ -20,14 +20,18 @@ import com.sacredflow.app.ui.screen.generation.ResultScreen
 import com.sacredflow.app.ui.screen.help.CrisisResourcesScreen
 import com.sacredflow.app.ui.screen.help.HelpScreen
 import com.sacredflow.app.ui.screen.home.HomeScreen
+import com.sacredflow.app.ui.screen.legal.PrivacyPolicyScreen
+import com.sacredflow.app.ui.screen.legal.TermsScreen
 import com.sacredflow.app.ui.screen.library.LibraryScreen
 import com.sacredflow.app.ui.screen.library.PrayerDetailScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingContextScreen
+import com.sacredflow.app.ui.screen.onboarding.OnboardingPersonaScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingRecipientScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingToneScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingTopicScreen
 import com.sacredflow.app.ui.screen.onboarding.OnboardingWelcomeScreen
 import com.sacredflow.app.ui.screen.paywall.PaywallScreen
+import com.sacredflow.app.ui.screen.prayfor.PrayForScreen
 import com.sacredflow.app.ui.screen.reminder.ReminderScreen
 import com.sacredflow.app.ui.screen.settings.SettingsScreen
 import com.sacredflow.app.ui.screen.splash.SplashScreen
@@ -82,7 +86,17 @@ fun SacredFlowNavHost(navController: NavHostController) {
             navigation<OnboardingGraph>(startDestination = OnboardingWelcomeRoute) {
                 composable<OnboardingWelcomeRoute> {
                     OnboardingWelcomeScreen(
-                        onNext = { navController.navigate(OnboardingRecipientRoute) }
+                        // Welcome now leads into the persona step instead of the
+                        // 4-step form. Form is still reachable as the "customize" branch.
+                        onNext = { navController.navigate(OnboardingPersonaRoute) }
+                    )
+                }
+                composable<OnboardingPersonaRoute> {
+                    OnboardingPersonaScreen(
+                        navController = navController,
+                        onChosen = { navController.navigate(OnboardingContextRoute) },
+                        onCustomize = { navController.navigate(OnboardingRecipientRoute) },
+                        onBack = { navController.popBackStack() }
                     )
                 }
                 composable<OnboardingRecipientRoute> {
@@ -125,6 +139,7 @@ fun SacredFlowNavHost(navController: NavHostController) {
             composable<HomeRoute> {
                 HomeScreen(
                     onCreate = { navController.navigate(CreateRoute) },
+                    onPrayForSomeone = { navController.navigate(PrayForRoute) },
                     onOpenPrayer = { id -> navController.navigate(PrayerDetailRoute(id)) }
                 )
             }
@@ -142,12 +157,22 @@ fun SacredFlowNavHost(navController: NavHostController) {
             composable<SettingsRoute> {
                 SettingsScreen(
                     onOpenPaywall = { navController.navigate(PaywallRoute) },
-                    onOpenHelp = { navController.navigate(HelpRoute) }
+                    onOpenHelp = { navController.navigate(HelpRoute) },
+                    onOpenPrivacy = { navController.navigate(PrivacyPolicyRoute) },
+                    onOpenTerms = { navController.navigate(TermsRoute) }
                 )
             }
 
             composable<CreateRoute> {
                 CreateScreen(
+                    onGenerate = { navController.navigate(GenerationLoadingRoute) },
+                    onPaywall = { navController.navigate(PaywallRoute) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable<PrayForRoute> {
+                PrayForScreen(
                     onGenerate = { navController.navigate(GenerationLoadingRoute) },
                     onPaywall = { navController.navigate(PaywallRoute) },
                     onBack = { navController.popBackStack() }
@@ -223,6 +248,13 @@ fun SacredFlowNavHost(navController: NavHostController) {
                         }
                     }
                 )
+            }
+
+            composable<PrivacyPolicyRoute> {
+                PrivacyPolicyScreen(onBack = { navController.popBackStack() })
+            }
+            composable<TermsRoute> {
+                TermsScreen(onBack = { navController.popBackStack() })
             }
         }
     }

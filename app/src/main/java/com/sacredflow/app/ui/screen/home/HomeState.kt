@@ -11,7 +11,8 @@ data class HomeState(
     val remainingFreeToday: Int = 5,
     val totalFreeDaily: Int = 5,
     val daily: DailyReflectionState = DailyReflectionState.Loading,
-    val resurface: List<LibraryResurfaceUseCase.ResurfaceCard> = emptyList()
+    val resurface: List<LibraryResurfaceUseCase.ResurfaceCard> = emptyList(),
+    val streakDays: Int = 0
 ) {
     val quotaLabel: String
         get() = when {

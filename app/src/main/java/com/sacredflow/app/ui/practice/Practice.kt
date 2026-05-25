@@ -62,7 +62,9 @@ import java.security.MessageDigest
 import kotlin.coroutines.resume
 
 // Voice + chunking constants — keep in sync with the Worker default in wrangler.toml.
-private const val TTS_VOICE = "nova"
+// TTS_VOICE_DEFAULT is the fallback when the caller doesn't provide one (e.g. when
+// preferences haven't loaded yet). The active voice flows through PracticeState.
+internal const val TTS_VOICE_DEFAULT = "nova"
 private const val TTS_MODEL = "tts-1"
 // OpenAI TTS speed range: 0.25 (very slow) .. 4.0 (very fast). 1.0 is default.
 // 0.85 = ~15% slower; suits chant pacing without sounding sluggish.
@@ -131,6 +133,7 @@ private fun String.wordCount(): Int = split(WS).count { it.isNotBlank() }
 class PracticeState internal constructor(
     appContext: Context,
     private val scope: CoroutineScope,
+    private val voiceKey: String = TTS_VOICE_DEFAULT,
 ) {
     var phase: PracticePhase by mutableStateOf(PracticePhase.Idle)
         private set
@@ -307,7 +310,7 @@ class PracticeState internal constructor(
                 setRequestProperty("Accept", "audio/mpeg, application/json")
             }
             conn.outputStream.use { out ->
-                val payload = """{"text":${jsonString(text)},"voice":"$TTS_VOICE","model":"$TTS_MODEL","speed":$TTS_SPEED}"""
+                val payload = """{"text":${jsonString(text)},"voice":"$voiceKey","model":"$TTS_MODEL","speed":$TTS_SPEED}"""
                 out.write(payload.toByteArray(Charsets.UTF_8))
             }
             val code = conn.responseCode
@@ -374,7 +377,7 @@ class PracticeState internal constructor(
 
     private fun cacheKey(text: String): String {
         val md = MessageDigest.getInstance("SHA-1")
-        val input = "$TTS_VOICE|$TTS_MODEL|$TTS_SPEED|$text".toByteArray(Charsets.UTF_8)
+        val input = "$voiceKey|$TTS_MODEL|$TTS_SPEED|$text".toByteArray(Charsets.UTF_8)
         return md.digest(input).joinToString("") { "%02x".format(it) }
     }
 
@@ -394,10 +397,17 @@ class PracticeState internal constructor(
 }
 
 @Composable
-fun rememberPracticeState(text: String): PracticeState {
+fun rememberPracticeState(
+    text: String,
+    voiceKey: String = TTS_VOICE_DEFAULT
+): PracticeState {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    val state = remember { PracticeState(ctx.applicationContext, scope) }
+    // Re-create when the voice key changes so the cache key (and any in-flight
+    // downloads) match what the user actually selected.
+    val state = remember(voiceKey) {
+        PracticeState(ctx.applicationContext, scope, voiceKey)
+    }
     LaunchedEffect(text) { state.setText(text) }
     DisposableEffect(state) {
         onDispose { state.dispose() }

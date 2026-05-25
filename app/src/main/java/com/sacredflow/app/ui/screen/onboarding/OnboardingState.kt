@@ -1,5 +1,6 @@
 package com.sacredflow.app.ui.screen.onboarding
 
+import com.sacredflow.app.domain.model.Persona
 import com.sacredflow.app.domain.model.Recipient
 import com.sacredflow.app.domain.model.Tone
 
@@ -11,6 +12,7 @@ data class OnboardingState(
     val tone: Tone? = null,
     val userName: String = "",
     val userContext: String = "",
+    val persona: Persona? = null,
     val isSubmitting: Boolean = false
 ) {
     val canContinueFromRecipient: Boolean
@@ -34,6 +36,7 @@ data class OnboardingState(
 }
 
 sealed interface OnboardingAction {
+    data class SetPersona(val persona: Persona) : OnboardingAction
     data class SetRecipient(val recipient: Recipient) : OnboardingAction
     data class EnableCustomRecipientMode(val enabled: Boolean) : OnboardingAction
     data class SetCustomRecipientDraft(val draft: String) : OnboardingAction

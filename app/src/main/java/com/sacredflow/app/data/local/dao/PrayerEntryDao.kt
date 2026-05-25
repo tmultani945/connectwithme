@@ -20,6 +20,9 @@ interface PrayerEntryDao {
     @Query("UPDATE prayer_entries SET userNote = :note, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateNote(id: Long, note: String?, updatedAt: Long)
 
+    @Query("UPDATE prayer_entries SET landed = :landed, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateLanded(id: Long, landed: String?, updatedAt: Long)
+
     @Query("UPDATE prayer_entries SET viewCount = viewCount + 1 WHERE id = :id")
     suspend fun incrementViewCount(id: Long)
 

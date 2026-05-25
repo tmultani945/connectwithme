@@ -3,6 +3,8 @@ package com.sacredflow.app.di
 import com.sacredflow.app.data.repository.BillingRepository
 import com.sacredflow.app.data.repository.GenerationRepository
 import com.sacredflow.app.data.repository.GenerationRepositoryImpl
+import com.sacredflow.app.data.repository.MoodRepository
+import com.sacredflow.app.data.repository.MoodRepositoryImpl
 import com.sacredflow.app.data.repository.PlayBillingRepository
 import com.sacredflow.app.data.repository.PrayerRepository
 import com.sacredflow.app.data.repository.PrayerRepositoryImpl
@@ -40,4 +42,7 @@ abstract class RepositoryModule {
     // Swap to a real PlayBillingRepository now that Batch 11 ships the implementation.
     @Binds @Singleton
     abstract fun bindBillingRepository(impl: PlayBillingRepository): BillingRepository
+
+    @Binds @Singleton
+    abstract fun bindMoodRepository(impl: MoodRepositoryImpl): MoodRepository
 }

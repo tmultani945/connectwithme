@@ -2,10 +2,12 @@ package com.sacredflow.app.ui.screen.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sacredflow.app.data.repository.MoodRepository
 import com.sacredflow.app.data.repository.PreferenceRepository
 import com.sacredflow.app.domain.model.GenerationRequest
 import com.sacredflow.app.domain.model.GenerationResult
 import com.sacredflow.app.domain.model.Length
+import com.sacredflow.app.domain.model.Mood
 import com.sacredflow.app.domain.model.Need
 import com.sacredflow.app.domain.model.Recipient
 import com.sacredflow.app.domain.model.Tone
@@ -29,6 +31,7 @@ class CreateViewModel @Inject constructor(
     private val observePreferences: ObservePreferencesUseCase,
     private val generatePrayerUseCase: GeneratePrayerUseCase,
     private val preferenceRepository: PreferenceRepository,
+    private val moodRepository: MoodRepository,
     private val resultHolder: GenerationResultHolder
 ) : ViewModel() {
 
@@ -115,6 +118,7 @@ class CreateViewModel @Inject constructor(
             is CreateAction.SetUserContext -> _state.update {
                 it.copy(userContext = action.text.take(CreateState.MAX_CONTEXT_LENGTH))
             }
+            is CreateAction.SetMood -> _state.update { it.copy(mood = action.value) }
             CreateAction.ToggleContextExpanded -> _state.update {
                 it.copy(isContextExpanded = !it.isContextExpanded)
             }
@@ -161,6 +165,12 @@ class CreateViewModel @Inject constructor(
                     if (isNotEmpty()) append("\n")
                     append("This is about: ${snapshot.topic.trim()}")
                 }
+                // Mood is folded in as a felt-state hint. The generator uses this to
+                // tune the opening posture without overriding the chosen tone.
+                snapshot.mood?.let { mood ->
+                    if (isNotEmpty()) append("\n")
+                    append("How I'm feeling right now: ${mood.descriptor}")
+                }
                 if (snapshot.userContext.isNotBlank()) {
                     if (isNotEmpty()) append("\n")
                     append(snapshot.userContext.trim())
@@ -194,6 +204,12 @@ class CreateViewModel @Inject constructor(
                 }
                 if (snapshot.recipient is Recipient.Custom) {
                     preferenceRepository.addCustomRecipient(snapshot.recipient.displayName)
+                }
+                // Log the mood the user picked alongside the generation. The
+                // prayerEntryId link is filled in if/when the user explicitly
+                // saves the result; until then it stays null.
+                snapshot.mood?.let { mood ->
+                    moodRepository.record(mood.storageKey)
                 }
             }
 

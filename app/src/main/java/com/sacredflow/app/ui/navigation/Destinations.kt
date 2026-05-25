@@ -4,10 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable object SplashRoute
 
-// Onboarding nested graph — synced with the 4-step Create flow:
-//   Welcome → Recipient → Topic → Tone → Context (name + extra)
+// Onboarding nested graph — persona-driven entry, with the original 4-step
+// flow available as a "choose everything yourself" branch:
+//   Welcome → Persona → Context (default path, name only)
+//                     ↘ Recipient → Topic → Tone → Context (customize path)
 @Serializable object OnboardingGraph
 @Serializable object OnboardingWelcomeRoute
+@Serializable object OnboardingPersonaRoute
 @Serializable object OnboardingRecipientRoute
 @Serializable object OnboardingTopicRoute
 @Serializable object OnboardingToneRoute
@@ -21,12 +24,15 @@ import kotlinx.serialization.Serializable
 
 // Full-screen destinations
 @Serializable object CreateRoute
+@Serializable object PrayForRoute
 @Serializable object GenerationLoadingRoute
 @Serializable object ResultRoute
 @Serializable data class PrayerDetailRoute(val prayerId: Long)
 @Serializable object PaywallRoute
 @Serializable object HelpRoute
 @Serializable object CrisisResourcesRoute
+@Serializable object PrivacyPolicyRoute
+@Serializable object TermsRoute
 
 /**
  * Marker — used by the NavHost to decide whether to render the bottom nav.

@@ -29,6 +29,9 @@ interface PrayerRepository {
 
     suspend fun updateNote(id: Long, note: String?)
 
+    /** Sets the user's "how did this land?" response on a saved prayer. */
+    suspend fun setLanded(id: Long, landed: String?)
+
     suspend fun toggleFavorite(id: Long): Boolean
 
     suspend fun softDelete(id: Long)

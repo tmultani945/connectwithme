@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sacredflow.app.core.analytics.Analytics
 import com.sacredflow.app.core.analytics.AnalyticsEvent
+import com.sacredflow.app.data.repository.PrayerRepository
+import com.sacredflow.app.data.repository.PreferenceRepository
 import com.sacredflow.app.domain.model.GenerationResult
 import com.sacredflow.app.domain.usecase.GeneratePrayerUseCase
 import com.sacredflow.app.domain.usecase.SavePrayerUseCase
@@ -22,6 +24,8 @@ class ResultViewModel @Inject constructor(
     private val resultHolder: GenerationResultHolder,
     private val savePrayerUseCase: SavePrayerUseCase,
     private val generatePrayerUseCase: GeneratePrayerUseCase,
+    private val preferenceRepository: PreferenceRepository,
+    private val prayerRepository: PrayerRepository,
     private val analytics: Analytics
 ) : ViewModel() {
 
@@ -32,6 +36,12 @@ class ResultViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
+        // Load the user's preferred TTS voice so Speak after me uses it.
+        viewModelScope.launch {
+            val prefs = preferenceRepository.get()
+            _state.update { it.copy(voiceKey = prefs.voiceKey) }
+        }
+
         val snapshot = resultHolder.current.value
         if (snapshot == null) {
             _state.update { it.copy(noActiveResult = true) }
@@ -41,6 +51,7 @@ class ResultViewModel @Inject constructor(
             // when that's the case, present this screen with isSaved already true so the
             // user doesn't accidentally double-save.
             val preSavedId = snapshot.savedPrayerId
+            val forTarget = snapshot.prayForTarget
             when (val r = snapshot.result) {
                 is GenerationResult.Success -> _state.update {
                     it.copy(
@@ -49,7 +60,8 @@ class ResultViewModel @Inject constructor(
                         isFallback = false,
                         generationHistoryId = r.generationHistoryId,
                         isSaved = preSavedId != null,
-                        savedPrayerId = preSavedId
+                        savedPrayerId = preSavedId,
+                        prayForTarget = forTarget
                     )
                 }
                 is GenerationResult.Fallback -> _state.update {
@@ -57,7 +69,8 @@ class ResultViewModel @Inject constructor(
                         request = request,
                         text = r.text,
                         isFallback = true,
-                        generationHistoryId = null
+                        generationHistoryId = null,
+                        prayForTarget = forTarget
                     )
                 }
                 else -> _state.update { it.copy(noActiveResult = true) }
@@ -150,5 +163,35 @@ class ResultViewModel @Inject constructor(
     fun onDone() {
         resultHolder.clear()
         viewModelScope.launch { _events.send(ResultEvent.NavigateHome) }
+    }
+
+    /**
+     * Records the user's "how did this land?" response. If the prayer hasn't
+     * been saved yet, the first tap auto-saves it so the feedback has a
+     * persistent home — the user shouldn't lose their reflection because they
+     * forgot to tap Save.
+     *
+     * Tapping the currently selected option clears the response.
+     */
+    fun onLanded(landedKey: String?) {
+        val snapshot = resultHolder.current.value ?: return
+        val success = snapshot.result as? GenerationResult.Success ?: return
+
+        val previousKey = _state.value.landed
+        val nextKey = if (previousKey == landedKey) null else landedKey
+
+        _state.update { it.copy(landed = nextKey) }
+
+        viewModelScope.launch {
+            val existingId = _state.value.savedPrayerId
+            if (existingId != null) {
+                prayerRepository.setLanded(existingId, nextKey)
+            } else {
+                // First feedback also persists the prayer so the response sticks.
+                val id = savePrayerUseCase(snapshot.request, success)
+                prayerRepository.setLanded(id, nextKey)
+                _state.update { it.copy(isSaved = true, savedPrayerId = id) }
+            }
+        }
     }
 }

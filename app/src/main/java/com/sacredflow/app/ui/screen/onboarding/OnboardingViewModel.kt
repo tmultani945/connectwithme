@@ -50,6 +50,22 @@ class OnboardingViewModel @Inject constructor(
 
     fun onAction(action: OnboardingAction) {
         when (action) {
+            is OnboardingAction.SetPersona -> {
+                // Persona maps to a (recipient, tone, topic) triple. Applying
+                // it fills in the form so the user only needs to give their name.
+                val p = action.persona
+                _state.update {
+                    it.copy(
+                        persona = p,
+                        recipient = Recipient.fromName(p.recipientDisplayName),
+                        isCustomRecipientMode = false,
+                        customRecipientDraft = "",
+                        tone = p.tone,
+                        topic = if (it.topic.isBlank()) p.topicSeed else it.topic
+                    )
+                }
+                analytics.log(AnalyticsEvent.OnboardingStepCompleted("persona"))
+            }
             is OnboardingAction.SetRecipient -> {
                 _state.update {
                     it.copy(

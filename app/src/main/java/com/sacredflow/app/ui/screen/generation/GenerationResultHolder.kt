@@ -25,9 +25,10 @@ class GenerationResultHolder @Inject constructor() {
     fun put(
         request: GenerationRequest,
         result: GenerationResult,
-        savedPrayerId: Long? = null
+        savedPrayerId: Long? = null,
+        prayForTarget: String? = null
     ) {
-        _current.value = Snapshot(request, result, savedPrayerId)
+        _current.value = Snapshot(request, result, savedPrayerId, prayForTarget)
     }
 
     fun clear() {
@@ -38,10 +39,14 @@ class GenerationResultHolder @Inject constructor() {
      * @param savedPrayerId Non-null when the producing screen has already persisted
      *   this prayer (e.g. onboarding auto-saves the first reflection so Home's daily
      *   card can adopt it without spending a second API call).
+     * @param prayForTarget Non-null when this is a "prayer for someone you love"
+     *   generation — the name of the person being held. The Result screen + share
+     *   card use this to render "for [NAME]" framing.
      */
     data class Snapshot(
         val request: GenerationRequest,
         val result: GenerationResult,
-        val savedPrayerId: Long? = null
+        val savedPrayerId: Long? = null,
+        val prayForTarget: String? = null
     )
 }

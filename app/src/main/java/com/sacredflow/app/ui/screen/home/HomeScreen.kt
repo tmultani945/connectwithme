@@ -57,6 +57,7 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     onCreate: () -> Unit,
+    onPrayForSomeone: () -> Unit,
     onOpenPrayer: (Long) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -95,11 +96,22 @@ fun HomeScreen(
                     modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 28.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = todayLabel(),
-                        style = typo.overline,
-                        color = palette.ink3
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = todayLabel(),
+                            style = typo.overline,
+                            color = palette.ink3
+                        )
+                        // Streak appears as a tiny inline pill once the user has
+                        // returned at least 2 days. Quiet language, no nagging.
+                        if (state.streakDays >= 2) {
+                            Text(
+                                text = "  ·  ✦ ${state.streakDays} DAYS",
+                                style = typo.overline,
+                                color = palette.primaryInk
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = state.greeting,
@@ -121,6 +133,9 @@ fun HomeScreen(
             }
 
             // ── Demoted "Create another" ──
+            // Both secondary CTAs use the same shape: glyph + spacer + label,
+            // centered. No inline quota label — the disabled state already
+            // communicates "no free reflections left."
             item {
                 OutlinedButton(
                     onClick = onCreate,
@@ -132,10 +147,10 @@ fun HomeScreen(
                     shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.dp, palette.outlineSoft)
                 ) {
-                    Icon(
-                        Icons.Outlined.Add,
-                        contentDescription = null,
-                        tint = palette.primaryInk
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.primaryInk
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
@@ -143,11 +158,32 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                         color = palette.primaryInk
                     )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // ── Pray for someone you love (Phase 10 entry) ──
+            item {
+                OutlinedButton(
+                    onClick = onPrayForSomeone,
+                    enabled = state.isPlusUser || state.remainingFreeToday > 0,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, palette.outlineSoft)
+                ) {
+                    Text(
+                        text = "✦",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.primaryInk
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "·  ${state.quotaLabel.lowercase()}",
-                        style = typo.overline,
-                        color = palette.ink3
+                        text = "Pray for someone you love",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.primaryInk
                     )
                 }
                 Spacer(modifier = Modifier.height(34.dp))

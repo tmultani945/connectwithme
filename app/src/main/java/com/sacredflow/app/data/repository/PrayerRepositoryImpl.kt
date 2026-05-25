@@ -88,6 +88,10 @@ class PrayerRepositoryImpl @Inject constructor(
         prayerDao.updateNote(id, note?.takeIf { it.isNotBlank() }, clock.nowMillis())
     }
 
+    override suspend fun setLanded(id: Long, landed: String?) = withContext(dispatchers.io) {
+        prayerDao.updateLanded(id, landed, clock.nowMillis())
+    }
+
     override suspend fun toggleFavorite(id: Long): Boolean = withContext(dispatchers.io) {
         val isFav = favoriteDao.isFavorited(id)
         if (isFav) {

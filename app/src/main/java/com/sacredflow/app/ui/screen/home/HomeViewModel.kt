@@ -3,20 +3,19 @@ package com.sacredflow.app.ui.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sacredflow.app.core.time.Clock
+import com.sacredflow.app.data.local.entity.PrayerEntry
 import com.sacredflow.app.data.repository.PrayerRepository
+import com.sacredflow.app.domain.model.QuotaStatus
 import com.sacredflow.app.domain.usecase.CheckQuotaUseCase
 import com.sacredflow.app.domain.usecase.GetTodayReflectionUseCase
 import com.sacredflow.app.domain.usecase.LibraryResurfaceUseCase
+import com.sacredflow.app.domain.usecase.RecordStreakVisitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -27,13 +26,15 @@ class HomeViewModel @Inject constructor(
     private val checkQuotaUseCase: CheckQuotaUseCase,
     private val getTodayReflection: GetTodayReflectionUseCase,
     private val libraryResurface: LibraryResurfaceUseCase,
+    private val recordStreakVisit: RecordStreakVisitUseCase,
     private val clock: Clock
 ) : ViewModel() {
 
-    // Daily + resurface live in their own state so reactive flows (recents, quota)
-    // don't reset them while the daily generation is in flight.
+    // Async-loaded state that the reactive flows below can read without
+    // racing each other.
     private val _daily = MutableStateFlow<DailyReflectionState>(DailyReflectionState.Loading)
     private val _resurface = MutableStateFlow<List<LibraryResurfaceUseCase.ResurfaceCard>>(emptyList())
+    private val _streak = MutableStateFlow(0)
 
     val state: StateFlow<HomeState> = combine(
         // Fetch one extra so we still show 5 cards after filtering out the daily.
@@ -41,11 +42,21 @@ class HomeViewModel @Inject constructor(
         prayerRepository.observeFavoriteIds(),
         checkQuotaUseCase.observe(),
         _daily,
-        _resurface
-    ) { recents, favIds, quota, daily, resurface ->
+        _resurface,
+        _streak
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        val recents = values[0] as List<PrayerEntry>
+        @Suppress("UNCHECKED_CAST")
+        val favIds = values[1] as Set<Long>
+        val quota = values[2] as QuotaStatus
+        val daily = values[3] as DailyReflectionState
+        @Suppress("UNCHECKED_CAST")
+        val resurface = values[4] as List<LibraryResurfaceUseCase.ResurfaceCard>
+        val streak = values[5] as Int
+
         // The daily reflection is rendered as its own hero card up top — don't
-        // also surface it in Recent or in the resurface row, or the user sees
-        // the same prayer twice (or three times) on the same screen.
+        // also surface it in Recent or in the resurface row.
         val dailyId = (daily as? DailyReflectionState.Ready)?.prayer?.id
         val filteredRecents = if (dailyId == null) recents.take(5)
             else recents.filter { it.id != dailyId }.take(5)
@@ -60,7 +71,8 @@ class HomeViewModel @Inject constructor(
             remainingFreeToday = quota.remainingToday,
             totalFreeDaily = quota.freeGenerationsTotal,
             daily = daily,
-            resurface = filteredResurface
+            resurface = filteredResurface,
+            streakDays = streak
         )
     }.stateIn(
         scope = viewModelScope,
@@ -71,6 +83,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadDailyReflection()
         loadResurfaceCards()
+        recordVisit()
     }
 
     private fun loadDailyReflection() {
@@ -87,6 +100,12 @@ class HomeViewModel @Inject constructor(
     private fun loadResurfaceCards() {
         viewModelScope.launch {
             _resurface.value = libraryResurface()
+        }
+    }
+
+    private fun recordVisit() {
+        viewModelScope.launch {
+            _streak.value = recordStreakVisit()
         }
     }
 

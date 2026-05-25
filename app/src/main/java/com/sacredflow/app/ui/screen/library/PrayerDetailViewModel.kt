@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.sacredflow.app.data.repository.PrayerRepository
+import com.sacredflow.app.data.repository.PreferenceRepository
 import com.sacredflow.app.domain.usecase.DeletePrayerUseCase
 import com.sacredflow.app.domain.usecase.GetPrayerDetailUseCase
 import com.sacredflow.app.domain.usecase.ToggleFavoriteUseCase
@@ -23,7 +25,9 @@ class PrayerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getPrayerDetail: GetPrayerDetailUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
-    private val deletePrayerUseCase: DeletePrayerUseCase
+    private val deletePrayerUseCase: DeletePrayerUseCase,
+    private val preferenceRepository: PreferenceRepository,
+    private val prayerRepository: PrayerRepository
 ) : ViewModel() {
 
     private val prayerId: Long = savedStateHandle.toRoute<PrayerDetailRoute>().prayerId
@@ -37,6 +41,10 @@ class PrayerDetailViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             getPrayerDetail.markViewed(prayerId)
+        }
+        viewModelScope.launch {
+            val prefs = preferenceRepository.get()
+            _state.update { it.copy(voiceKey = prefs.voiceKey) }
         }
         viewModelScope.launch {
             getPrayerDetail(prayerId).collect { detail ->
@@ -84,6 +92,12 @@ class PrayerDetailViewModel @Inject constructor(
             PrayerDetailAction.Copy -> viewModelScope.launch {
                 val text = _state.value.entry?.bodyText.orEmpty()
                 if (text.isNotEmpty()) _events.send(PrayerDetailEvent.CopiedToClipboard(text))
+            }
+            is PrayerDetailAction.SetLanded -> viewModelScope.launch {
+                // Tap toggles: same key clears, different key replaces.
+                val current = _state.value.entry?.landed
+                val next = if (current == action.key) null else action.key
+                prayerRepository.setLanded(prayerId, next)
             }
             PrayerDetailAction.RequestDelete -> _state.update { it.copy(showDeleteConfirm = true) }
             PrayerDetailAction.CancelDelete -> _state.update { it.copy(showDeleteConfirm = false) }

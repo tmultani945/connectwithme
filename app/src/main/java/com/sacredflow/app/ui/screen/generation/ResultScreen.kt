@@ -67,10 +67,15 @@ import com.sacredflow.app.ui.components.sacredVignette
 import com.sacredflow.app.ui.practice.PracticeSheet
 import com.sacredflow.app.ui.practice.rememberPracticeState
 import com.sacredflow.app.domain.model.Tone
+import com.sacredflow.app.ui.share.ShareCardCapture
+import com.sacredflow.app.ui.share.buildShareCardIntent
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
 import com.sacredflow.app.ui.theme.PillShape
 import com.sacredflow.app.ui.util.backgroundRes
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun ResultScreen(
@@ -81,7 +86,8 @@ fun ResultScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val practice = rememberPracticeState(text = state.text)
+    val coroutineScope = rememberCoroutineScope()
+    val practice = rememberPracticeState(text = state.text, voiceKey = state.voiceKey)
     val palette = LocalSacredPalette.current
 
     LaunchedEffect(Unit) {
@@ -93,11 +99,35 @@ fun ResultScreen(
                     snackbarHostState.showSnackbar("Copied")
                 }
                 is ResultEvent.ShareText -> {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, event.text)
+                    // Render the visual share card on a background coroutine, fall
+                    // back to plain-text share if anything goes wrong (e.g. no
+                    // ComponentActivity context, OOM, missing tone background).
+                    val activity = context as? ComponentActivity
+                    val req = state.request
+                    if (activity == null || req == null) {
+                        startPlainTextShare(context, event.text)
+                    } else {
+                        coroutineScope.launch {
+                            val tone = runCatching { Tone.fromKey(req.tone) }.getOrDefault(Tone.Gentle)
+                            val forTarget = state.prayForTarget
+                            val rendered = runCatching {
+                                ShareCardCapture.render(
+                                    activity = activity,
+                                    text = event.text,
+                                    recipient = req.recipient,
+                                    tone = tone,
+                                    forTarget = forTarget
+                                )
+                            }
+                            rendered.onSuccess { uri ->
+                                val intent = buildShareCardIntent(uri, event.text, forTarget)
+                                context.startActivity(Intent.createChooser(intent, null))
+                            }.onFailure {
+                                snackbarHostState.showSnackbar("Couldn't make the card — sending text instead.")
+                                startPlainTextShare(context, event.text)
+                            }
+                        }
                     }
-                    context.startActivity(Intent.createChooser(intent, null))
                 }
                 ResultEvent.NavigateHome -> onDone()
                 is ResultEvent.ShowSnackbar -> snackbarHostState.showSnackbar(event.message)
@@ -198,6 +228,16 @@ fun ResultScreen(
                     Spacer(modifier = Modifier.height(36.dp))
                     Asterism(modifier = Modifier.align(Alignment.CenterHorizontally), size = 9.dp)
                     Spacer(modifier = Modifier.height(24.dp))
+
+                    // "How did this land?" — appears once the prayer is on screen.
+                    // First tap auto-saves the prayer to anchor the response.
+                    if (!state.isFallback && state.text.isNotBlank()) {
+                        com.sacredflow.app.ui.components.LandedPicker(
+                            selected = com.sacredflow.app.domain.model.Landed.fromKey(state.landed),
+                            onSelect = { viewModel.onLanded(it?.storageKey) }
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
 
                     state.request?.let { req ->
                         Text(
@@ -329,4 +369,17 @@ private fun PrayerBodyWithDropCap(
             }
         }
     }
+}
+
+/**
+ * Plain-text share fallback used when the share-card render fails or when
+ * the host activity isn't available. Keeps the share action functional even
+ * if the visual path breaks.
+ */
+private fun startPlainTextShare(context: Context, text: String) {
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+    context.startActivity(Intent.createChooser(intent, null))
 }

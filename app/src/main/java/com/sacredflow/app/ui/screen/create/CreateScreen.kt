@@ -98,27 +98,9 @@ private enum class CreateStep {
     }
 }
 
-// Starter topics — concrete and varied to show the range. Ordered with the most
-// common life-shaping intents (career, love, wealth) up front so they're the
-// first chips the user sees.
-private val TOPIC_SUGGESTIONS: List<String> = listOf(
-    "Achieve Success in Career",
-    "Attract love",
-    "Bring more wealth",
-    "Heal a relationship",
-    "Strength in hardship",
-    "Better health",
-    "Calm my anxiety",
-    "A clear decision",
-    "Confidence before a meeting",
-    "Letting go of fear",
-    "Peace before sleep",
-    "Forgiveness",
-    "Patience with myself",
-    "Find my purpose",
-    "Gratitude for today",
-    "Protect my family"
-)
+// Single source of truth lives in ui/util/TopicSuggestions.kt. Aliased here so
+// the existing call sites can keep their TOPIC_SUGGESTIONS reference.
+private val TOPIC_SUGGESTIONS = com.sacredflow.app.ui.util.TopicSuggestions
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -386,6 +368,16 @@ private fun StepQuickStart(
                 value = state.tone.displayName,
                 onTap = onEditTone
             )
+            // Mood — optional. Folded into the prompt as a felt-state hint and
+            // logged for the mood history (Settings, future iteration).
+            Column {
+                Text("FEELING (OPTIONAL)", style = typo.overline, color = palette.ink3)
+                Spacer(modifier = Modifier.height(8.dp))
+                com.sacredflow.app.ui.components.MoodPicker(
+                    selected = state.mood,
+                    onSelect = { onAction(CreateAction.SetMood(it)) }
+                )
+            }
             Column {
                 Text("ABOUT (OPTIONAL)", style = typo.overline, color = palette.ink3)
                 Spacer(modifier = Modifier.height(8.dp))
