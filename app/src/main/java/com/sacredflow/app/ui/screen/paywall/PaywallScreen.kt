@@ -135,24 +135,26 @@ fun PaywallScreen(
                 Asterism(size = 10.dp, modifier = Modifier.align(Alignment.CenterHorizontally))
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Keep the practice flowing.",
+                    text = "Make the practice yours.",
                     style = MaterialTheme.typography.displayLarge,
                     color = palette.primaryInk
                 )
                 Text(
-                    text = "Unlimited reflections, long-form prayers, gentle voice reading, and more daily reminders.",
+                    text = "Plus deepens what's already here — variety in your daily reflection, length when you need it, voice without limits, and reminders that fit your rhythm.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = palette.ink2
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                FeatureRow("Unlimited reflections")
-                FeatureRow("Long-form prayers")
-                FeatureRow("Gentle voice reading (coming soon)")
-                FeatureRow("Multiple reminders")
-                FeatureRow("Beautiful share cards")
-                FeatureRow("Priority generation")
+                // Frame each line as the thing the user *gets*, not the limit removed.
+                // Matches the post-Phase-1 emotional contract: the practice meets you.
+                FeatureRow("A daily reflection that varies with you")
+                FeatureRow("Unlimited reflections, any time")
+                FeatureRow("Long-form prayers, when you want more")
+                FeatureRow("Voice readings without limits")
+                FeatureRow("Multiple reminders, your way")
+                FeatureRow("Priority generation, always")
 
                 Spacer(modifier = Modifier.height(8.dp))
 

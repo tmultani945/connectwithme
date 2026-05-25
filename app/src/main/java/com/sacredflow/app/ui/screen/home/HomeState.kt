@@ -1,6 +1,7 @@
 package com.sacredflow.app.ui.screen.home
 
 import com.sacredflow.app.data.local.entity.PrayerEntry
+import com.sacredflow.app.domain.usecase.LibraryResurfaceUseCase
 
 data class HomeState(
     val greeting: String = "",
@@ -8,7 +9,9 @@ data class HomeState(
     val favoriteIds: Set<Long> = emptySet(),
     val isPlusUser: Boolean = false,
     val remainingFreeToday: Int = 5,
-    val totalFreeDaily: Int = 5
+    val totalFreeDaily: Int = 5,
+    val daily: DailyReflectionState = DailyReflectionState.Loading,
+    val resurface: List<LibraryResurfaceUseCase.ResurfaceCard> = emptyList()
 ) {
     val quotaLabel: String
         get() = when {
@@ -16,4 +19,11 @@ data class HomeState(
             remainingFreeToday == 0 -> "Out of free reflections today"
             else -> "$remainingFreeToday of $totalFreeDaily free today"
         }
+}
+
+sealed interface DailyReflectionState {
+    data object Loading : DailyReflectionState
+    data class Ready(val prayer: PrayerEntry) : DailyReflectionState
+    data class Fallback(val text: String) : DailyReflectionState
+    data class Failed(val message: String) : DailyReflectionState
 }

@@ -22,16 +22,26 @@ class GenerationResultHolder @Inject constructor() {
     private val _current = MutableStateFlow<Snapshot?>(null)
     val current: StateFlow<Snapshot?> = _current.asStateFlow()
 
-    fun put(request: GenerationRequest, result: GenerationResult) {
-        _current.value = Snapshot(request, result)
+    fun put(
+        request: GenerationRequest,
+        result: GenerationResult,
+        savedPrayerId: Long? = null
+    ) {
+        _current.value = Snapshot(request, result, savedPrayerId)
     }
 
     fun clear() {
         _current.value = null
     }
 
+    /**
+     * @param savedPrayerId Non-null when the producing screen has already persisted
+     *   this prayer (e.g. onboarding auto-saves the first reflection so Home's daily
+     *   card can adopt it without spending a second API call).
+     */
     data class Snapshot(
         val request: GenerationRequest,
-        val result: GenerationResult
+        val result: GenerationResult,
+        val savedPrayerId: Long? = null
     )
 }

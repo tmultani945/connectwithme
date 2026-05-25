@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,7 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,9 +66,11 @@ import com.sacredflow.app.ui.components.sacredPaper
 import com.sacredflow.app.ui.components.sacredVignette
 import com.sacredflow.app.ui.practice.PracticeSheet
 import com.sacredflow.app.ui.practice.rememberPracticeState
+import com.sacredflow.app.domain.model.Tone
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
 import com.sacredflow.app.ui.theme.PillShape
+import com.sacredflow.app.ui.util.backgroundRes
 
 @Composable
 fun ResultScreen(
@@ -104,26 +109,45 @@ fun ResultScreen(
         if (state.noActiveResult) onDone()
     }
 
+    // Tone-adaptive backdrop: each tone has a paired Unsplash photo (morning mist,
+    // sunrise, candle light, stone on sand, still water, horizon line). The photo
+    // sits behind a denser linen scrim so the prose stays the focus — the image
+    // reads as a felt atmosphere, not a busy background.
+    val tone = state.request?.tone?.let { Tone.fromKey(it) } ?: Tone.Gentle
+
     Scaffold(
         containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        // Warm gradient backdrop fading from a light apricot at top to the linen bg below.
         Box(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFFF6EBD6).copy(alpha = 0.65f),
-                            MaterialTheme.colorScheme.background
+        ) {
+            Image(
+                painter = painterResource(tone.backgroundRes()),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            // Linen scrim — denser than the original gradient so the photo can
+            // sit underneath without fighting the prose for attention. Warm at top
+            // so the recipient badge feels lit, opaque toward the bottom so the
+            // action pills sit cleanly.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFFF6EBD6).copy(alpha = 0.78f),
+                                MaterialTheme.colorScheme.background.copy(alpha = 0.92f)
+                            )
                         )
                     )
-                )
-                .sacredPaper()
-                .sacredVignette(strength = 0.08f)
-        ) {
+                    .sacredPaper()
+                    .sacredVignette(strength = 0.08f)
+            )
             Column(modifier = Modifier.fillMaxSize()) {
                 // ── Top bar — close · recipient · menu (menu is decorative for now) ──
                 Row(

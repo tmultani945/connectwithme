@@ -83,4 +83,20 @@ interface PrayerEntryDao {
 
     @Query("SELECT COUNT(*) FROM prayer_entries WHERE isDeleted = 0")
     fun observeCount(): Flow<Int>
+
+    @Query("""
+        SELECT * FROM prayer_entries
+        WHERE isDeleted = 0 AND createdAt >= :sinceMs
+        ORDER BY createdAt DESC
+        LIMIT 1
+    """)
+    suspend fun findFirstSince(sinceMs: Long): PrayerEntry?
+
+    @Query("""
+        SELECT * FROM prayer_entries
+        WHERE isDeleted = 0 AND createdAt BETWEEN :startMs AND :endMs
+        ORDER BY createdAt DESC
+        LIMIT :limit
+    """)
+    suspend fun findInRange(startMs: Long, endMs: Long, limit: Int): List<PrayerEntry>
 }

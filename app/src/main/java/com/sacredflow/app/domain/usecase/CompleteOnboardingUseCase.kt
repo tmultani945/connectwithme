@@ -34,7 +34,9 @@ class CompleteOnboardingUseCase @Inject constructor(
         preferenceRepository.markOnboardingComplete()
         analytics.log(AnalyticsEvent.OnboardingCompleted)
 
-        // Then run the first generation.
+        // Then run the first generation. This is the welcome gift AND day 1's daily
+        // reflection — bypass the quota so the user lands on Home with all 5 free
+        // creations still available.
         return generatePrayerUseCase(
             GenerationRequest(
                 useCase = input.useCase.storageKey,
@@ -45,7 +47,8 @@ class CompleteOnboardingUseCase @Inject constructor(
                 length = Length.Medium.storageKey,
                 userContext = input.userContext?.takeIf { it.isNotBlank() },
                 isRegeneration = false
-            )
+            ),
+            isDailyAutomatic = true
         )
     }
 

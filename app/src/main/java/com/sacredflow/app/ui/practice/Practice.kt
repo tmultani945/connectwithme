@@ -452,10 +452,12 @@ fun PracticeSheet(state: PracticeState) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Phase indicator ──
+            // Labels make the call-and-response explicit: the voice speaks, then
+            // names the silence as the user's turn before they advance.
             val phaseLabel = when (state.phase) {
                 PracticePhase.Preparing -> "Loading voice…"
                 PracticePhase.Speaking -> "Listen…"
-                PracticePhase.Waiting -> "Tap next when ready"
+                PracticePhase.Waiting -> "Your turn — repeat aloud"
                 PracticePhase.Finished -> "Done"
                 PracticePhase.Idle -> ""
             }
@@ -480,6 +482,21 @@ fun PracticeSheet(state: PracticeState) {
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Quiet invitation in the Waiting phase — extends the "Your turn"
+            // affordance from the chip label into the body so the user knows the
+            // silence is deliberate, not a glitch.
+            if (state.phase == PracticePhase.Waiting) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Text(
+                    text = "Take your time. Tap next when ready.",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    textAlign = TextAlign.Center
                 )
             }
 

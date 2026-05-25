@@ -59,6 +59,19 @@ class PrayerRepositoryImpl @Inject constructor(
 
     override fun observeTotalCount(): Flow<Int> = prayerDao.observeCount()
 
+    override suspend fun getById(id: Long): PrayerEntry? = withContext(dispatchers.io) {
+        prayerDao.getById(id)
+    }
+
+    override suspend fun findFirstSince(sinceMs: Long): PrayerEntry? = withContext(dispatchers.io) {
+        prayerDao.findFirstSince(sinceMs)
+    }
+
+    override suspend fun findInRange(startMs: Long, endMs: Long, limit: Int): List<PrayerEntry> =
+        withContext(dispatchers.io) {
+            prayerDao.findInRange(startMs, endMs, limit)
+        }
+
     override suspend fun save(entry: PrayerEntry, generationHistoryId: Long?): Long =
         withContext(dispatchers.io) {
             val now = clock.nowMillis()

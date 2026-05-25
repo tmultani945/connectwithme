@@ -42,9 +42,23 @@ interface UserPreferenceDao {
     suspend fun setSubscriberStatus(isPlus: Boolean)
 
     @Query("""
-        UPDATE user_preferences 
-        SET onboardingComplete = 1 
+        UPDATE user_preferences
+        SET onboardingComplete = 1
         WHERE id = ${UserPreference.SINGLETON_ID}
     """)
     suspend fun markOnboardingComplete()
+
+    @Query("""
+        UPDATE user_preferences
+        SET dailyReflectionDate = :date, dailyReflectionPrayerId = :prayerId
+        WHERE id = ${UserPreference.SINGLETON_ID}
+    """)
+    suspend fun setDailyReflection(date: String, prayerId: Long)
+
+    @Query("""
+        UPDATE user_preferences
+        SET userName = :name
+        WHERE id = ${UserPreference.SINGLETON_ID}
+    """)
+    suspend fun setUserName(name: String)
 }

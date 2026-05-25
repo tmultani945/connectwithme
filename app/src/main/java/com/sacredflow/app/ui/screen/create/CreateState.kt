@@ -27,11 +27,13 @@ data class CreateState(
     val remainingFreeToday: Int? = null,
     val isPrefilled: Boolean = false
 ) {
+    // Topic is OPTIONAL — the quick path can submit with no topic; the worker
+    // prompt treats topic as a "what the speaker wants to pray about" hint and
+    // generates a reasonable general reflection when it's absent.
     val isValid: Boolean
         get() {
             val recipientOk = if (isCustomRecipientMode) customRecipientDraft.isNotBlank() else true
             return recipientOk &&
-                topic.isNotBlank() &&
                 topic.length <= MAX_TOPIC_LENGTH &&
                 userContext.length <= MAX_CONTEXT_LENGTH &&
                 userName.length <= MAX_NAME_LENGTH

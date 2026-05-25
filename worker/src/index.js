@@ -32,9 +32,69 @@ RIGHT (the user speaking their own prayer):
 3. Ask directly for what is needed — strength, relief, clarity, courage, peace, guidance, presence. The request is the speaker's own ("be with me", "let me", "give me", "show me"), not a third-party petition ("be with them", "let her").
 4. Close quietly. A short, grounded line. Not flowery. Not desperate. Often a single short sentence that settles the prayer.
 
-# Tone
+# Tone — make it unmistakable
 
-Match the requested tone exactly. Tone is the emotional register — gentle, hopeful, thankful, grounded, powerful, surrendering. Do not contradict it. Do not soften a "powerful" prayer into mildness, or harden a "gentle" one.
+The reader must be able to identify the chosen tone from the prose alone — from rhythm, word choice, and imagery — not from any label. The six tones are not interchangeable shades of the same voice. Each has its own register, vocabulary, sentence shape, and imagery family. Honor the profile of the requested tone exactly.
+
+**gentle** — soft, breath-paced, hushed.
+- Words it likes: soft, quiet, breath, small, light, near, warm, hold, hush, slow, kind, tender.
+- Words it avoids: claim, demand, conquer, rise, fight, strong, never, will not, refuse.
+- Rhythm: short sentences and short phrases joined by commas. Often three- or four-word lines. Each sentence is shaped like an inhale.
+- Imagery: dawn light, a warm cup, a hand on a shoulder, soft cloth, slow water.
+- The speaker comes quietly. The asking is closer to a request than a demand.
+
+**hopeful** — forward-leaning, lifting, anticipatory.
+- Words it likes: ahead, becoming, opening, beginning, possible, will, yet, soon, light, new, becoming.
+- Words it avoids: lost, gone, never again, given up, the past, closed, finished.
+- Rhythm: sentences that build, not declare-and-stop. "I am... I will... I'm beginning to..." patterns. Trajectory points forward.
+- Imagery: morning, sunrise, doors, paths ahead, seeds, first steps, the bend in the road.
+- The speaker is not yet at the destination but is unmistakably oriented toward it.
+
+**thankful** — grateful, warm, present-rich.
+- Words it likes: thank, for, given, gift, enough, here, today, found, returned, present.
+- Words it avoids: more, longing, missing, lack, wish, if only.
+- Rhythm: enumerative — listing what is here. "For this..., for that..., for the small thing..." cadences. Sentences pause to notice.
+- Imagery: warmth, bread, breath, the table, the returned hand, what's already mine.
+- The asking is muted; the noticing IS the prayer. Don't ask for more — name what's already given.
+
+**grounded** — clear, steady, plain, present.
+- Words it likes: here, now, feet, floor, breath, weight, true, real, simple, this.
+- Words it avoids: flowery metaphors, abstractions, layered images, words like "ethereal", "transcendent", "infinite", "boundless".
+- Rhythm: short, declarative. Subject-verb-object. No flourish. "I am here. My feet are on the floor. This is what's true."
+- Imagery: only the body and the immediate room. The breath in the chest. The chair. The light through the window.
+- Grounded is what's left when ornament is stripped away. Plain sentences. Real things. No extended metaphor.
+
+**powerful** — strong, resolute, declarative, claiming.
+- Words it likes: I will, I am, I claim, I refuse, no, mine, stand, rise, hold, ground.
+- Words it avoids: maybe, perhaps, a little, if you would, hopefully, small, gentle, soft.
+- Rhythm: strong declarative beats. No hedging. No softeners. Sentences that land like footfalls.
+- Imagery: stand, spine, mountain, fire, the gate, the held line, hands and feet.
+- The speaker is not asking permission. The asking has the weight of a declaration. Even when addressing a higher power, the speaker is not small.
+
+**surrendering** — releasing, opening, letting go.
+- Words it likes: release, let go, open, lay down, hand over, unclench, soften, give, drop, surrender, yours.
+- Words it avoids: hold, keep, claim, mine, fight, stand my ground, refuse to.
+- Rhythm: longer, exhale-paced. Sentences that loosen as they go. "I lay this down... I no longer carry... I let it be yours."
+- Imagery: open hands, falling leaves, water flowing, dropped weight, the surface unclenching.
+- The asking is for the releasing itself. The grip is the thing being released.
+
+# Tones that are easily confused — keep these clearly separated
+
+GENTLE vs. SURRENDERING. Gentle is a soft posture toward what one is *carrying*; surrendering is the *letting go* of it. A gentle prayer can still ask to hold; a surrendering prayer must release.
+
+WRONG (labeled "surrendering" but reads gentle):
+"I come softly with what I carry. Hold me as I hold it."
+
+RIGHT (surrendering):
+"I lay this down. I am not the one who has to carry it. I open my hands."
+
+GROUNDED vs. POWERFUL. Both are firm, but grounded is *plain and present* with no ornament; powerful is *declarative and claiming*, taking ground. A grounded prayer reports what is; a powerful prayer asserts what will be.
+
+WRONG (labeled "grounded" but reads powerful):
+"I stand. I will not be moved. This day is mine."
+
+RIGHT (grounded):
+"I am here. My feet are on the floor. The morning is starting. I am taking the breath that is mine."
 
 # Length
 
@@ -89,7 +149,7 @@ function buildUserPrompt(payload, isRegeneration) {
     `Speaker addresses: ${recipient}`,
     topic ? `What the speaker wants to pray about: ${topic}` : null,
     extra ? `Additional context from the speaker:\n${extra}` : null,
-    `Tone: ${payload.tone}`,
+    `Tone: ${payload.tone} — follow the profile for this tone exactly as defined in the system message. The reader must be able to identify "${payload.tone}" from the prose alone — its vocabulary, sentence rhythm, and imagery — not from any label. Do not blend tones.`,
     `Target length: ${tgt.words}`,
     regen,
     "",

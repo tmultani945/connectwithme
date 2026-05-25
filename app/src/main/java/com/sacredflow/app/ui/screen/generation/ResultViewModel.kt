@@ -37,13 +37,19 @@ class ResultViewModel @Inject constructor(
             _state.update { it.copy(noActiveResult = true) }
         } else {
             val request = snapshot.request
+            // Onboarding pre-saves the first reflection so it can seed the daily card —
+            // when that's the case, present this screen with isSaved already true so the
+            // user doesn't accidentally double-save.
+            val preSavedId = snapshot.savedPrayerId
             when (val r = snapshot.result) {
                 is GenerationResult.Success -> _state.update {
                     it.copy(
                         request = request,
                         text = r.text,
                         isFallback = false,
-                        generationHistoryId = r.generationHistoryId
+                        generationHistoryId = r.generationHistoryId,
+                        isSaved = preSavedId != null,
+                        savedPrayerId = preSavedId
                     )
                 }
                 is GenerationResult.Fallback -> _state.update {

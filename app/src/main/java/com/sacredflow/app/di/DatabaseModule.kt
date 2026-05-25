@@ -28,8 +28,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
-            // Foreign key enforcement is on by default for entities that declare them.
-            // No migrations yet — v1 ships at version 1.
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
 
     @Provides fun providePrayerEntryDao(db: AppDatabase): PrayerEntryDao = db.prayerEntryDao()

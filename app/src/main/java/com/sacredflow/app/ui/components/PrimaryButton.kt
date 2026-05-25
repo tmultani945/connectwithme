@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.PillShape
+import com.sacredflow.app.ui.util.rememberFirmTap
 
 @Composable
 fun PrimaryButton(
@@ -25,8 +26,9 @@ fun PrimaryButton(
     isLoading: Boolean = false
 ) {
     val palette = LocalSacredPalette.current
+    val firmTap = rememberFirmTap()
     Button(
-        onClick = onClick,
+        onClick = { firmTap(); onClick() },
         enabled = enabled && !isLoading,
         modifier = modifier
             .fillMaxWidth()

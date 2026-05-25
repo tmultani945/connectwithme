@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "generic": [
     "For the breath that just arrived. For the small light at the window. For the people whose names live quietly in this heart. For what is here — even the difficult parts — thank you. Thank you. Thank you.",
     "Let this moment soften. Let the day's edges blur for a moment. May whatever rests within ease just slightly. May the next breath arrive on its own."
@@ -7,19 +7,34 @@
   "byUseCase": {
     "Prayer": {
       "gentle": [
+        "I come quietly. There is no rush in me right now. I am holding what I am holding, and I am letting it be held in return. Let the morning meet me kindly. Let my hands stay open. Let the next breath arrive without my asking. That is enough for now.",
         "May the quiet of this moment find you. May worry loosen its grip, even just for now. May peace meet you in the small things — the cool side of the pillow, the warmth of a cup held in both hands, the kindness of an ordinary breath."
       ],
       "hopeful": [
+        "I am here at the start of something. I do not know its shape yet, but I can feel it becoming. I am taking the next step, then the one after. The light is coming. I am ready to meet it.",
         "May the morning carry something worth holding. May the path ahead feel lighter than expected. May small good things arrive from unexpected directions, and may you have the steadiness to receive them."
       ],
       "thankful": [
-        "For this breath. For these hands. For the soft light pressing through the window. For the long line of people whose love is somewhere inside this body — known and unknown — thank you."
+        "For this breath. For these hands. For the soft light pressing through the window. For the long line of people whose love is somewhere inside this body — known and unknown — thank you.",
+        "For the morning that arrived without my asking. For the people who love me in their own quiet ways. For the small things I almost missed. For what is here, even the hard parts. Thank you. Thank you."
       ],
       "grounded": [
+        "I am here. My feet are on the floor. The morning is starting. I am taking the breath that is mine. I do not have to understand all of it. I only have to be here. This is what is true.",
         "Let me stay close to what is real. Let the weight of my feet on the floor be enough. Let me not chase what is not mine, and let me not abandon what is."
+      ],
+      "powerful": [
+        "I stand in what is mine to stand in. I will not be smaller than I am today. My voice is mine to use. My ground is mine to hold. I am still here. I am still mine.",
+        "I will meet this day the way I am, not the way fear would have me. I will not give away what I have worked for. I will hold what is mine to hold. I am not asking permission to be here."
+      ],
+      "surrendering": [
+        "I lay this down. I am not the one who has to carry all of it. I open my hands and let what is not mine fall through them. The grip I have held is the thing I am releasing now. I let it be yours.",
+        "What I have been holding too tightly — I am loosening my fingers from it now. I do not have to be in charge of what was never mine. I let it go. I let it go. I let it go."
       ]
     },
     "Intention": {
+      "gentle": [
+        "Today I will move slowly. I will let small things take the time they need. I will be kind to the part of me that is tired. I will not push what wants to be quiet."
+      ],
       "grounded": [
         "Today I will move slowly enough to notice. I will let the small things take the time they need. I will keep one hand on what matters and one hand open to what arrives."
       ],
@@ -28,6 +43,12 @@
       ],
       "powerful": [
         "I stand in what is mine to stand in. My breath is steady. My voice is mine to use. I do not need to be smaller than I am."
+      ],
+      "thankful": [
+        "Today I will notice what is already here. I will let the morning be enough. I will say thank you for the breath I almost forgot to take, the people who love me in their quiet ways, the small things that arrived without asking."
+      ],
+      "surrendering": [
+        "Today I lay down what is not mine to carry. I will hold what is mine and release what is not. I will let the day be the day. I will not insist on being in charge of all of it."
       ]
     },
     "Gratitude": {
@@ -44,17 +65,29 @@
       ],
       "hopeful": [
         "May the slow turn toward wellness continue. May the body and the heart find what they need. May the people who care be near in whatever way is right. May the morning bring something good."
+      ],
+      "surrendering": [
+        "I release what is not mine to fix. I release the timeline I had imagined. I release the grip of the way I thought this would go. Whatever is healing, let it heal in its own way."
       ]
     },
     "Reflection": {
       "gentle": [
-        "Let me look at this day without judgment. Let me see what was hard, what was kind, what was small and good. Let the day settle as it is. There is nothing here that needs fixing tonight."
+        "Let me be gentle with myself tonight. Let me look at this day without judgment. Let me see what was hard, what was kind, what was small and good. Let the day settle as it is. There is nothing here that needs fixing tonight."
       ],
-      "surrendering": [
-        "I release what is not mine to carry. I release what cannot be solved tonight. I let the day be the day. I let myself be the one who is tired, the one who tried, the one who is here now."
+      "hopeful": [
+        "Looking back, I can see the small turn — the moment something started becoming. I am closer than I was yesterday. The line is not straight, but it is moving. The light is still coming. I am still going."
+      ],
+      "thankful": [
+        "For this day. For the people I crossed paths with. For the breath I took without noticing. For the small things that worked out — the green light, the kind word, the cup of warmth in the afternoon. For all of it, even the hard parts. Thank you."
       ],
       "grounded": [
         "Here is what I know: I am breathing. My feet are on the floor. The day is doing what days do. I do not have to understand all of it. I only have to be here."
+      ],
+      "powerful": [
+        "Today I held what I needed to hold. I did not give myself away. I spoke when it was mine to speak, and I stayed quiet when it was not. I am still here. I am still mine. Tomorrow I will do this again."
+      ],
+      "surrendering": [
+        "I release what is not mine to carry. I release what cannot be solved tonight. I let the day be the day. I let myself be the one who is tired, the one who tried, the one who is here now."
       ]
     },
     "Custom": {

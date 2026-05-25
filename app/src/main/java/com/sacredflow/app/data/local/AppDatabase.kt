@@ -3,6 +3,8 @@ package com.sacredflow.app.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.sacredflow.app.data.local.dao.FavoriteDao
 import com.sacredflow.app.data.local.dao.GenerationHistoryDao
 import com.sacredflow.app.data.local.dao.PrayerEntryDao
@@ -25,7 +27,7 @@ import com.sacredflow.app.data.local.entity.UserPreference
         Favorite::class,
         GenerationHistory::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -40,5 +42,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "sacred_flow.db"
+
+        // v1 -> v2: adds daily-reflection bookkeeping columns to user_preferences.
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE user_preferences ADD COLUMN dailyReflectionDate TEXT")
+                db.execSQL("ALTER TABLE user_preferences ADD COLUMN dailyReflectionPrayerId INTEGER")
+                db.execSQL("ALTER TABLE user_preferences ADD COLUMN userName TEXT NOT NULL DEFAULT ''")
+            }
+        }
     }
 }

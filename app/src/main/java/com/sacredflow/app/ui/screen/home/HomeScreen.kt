@@ -1,5 +1,6 @@
 package com.sacredflow.app.ui.screen.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,9 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sacredflow.app.data.local.entity.PrayerEntry
+import com.sacredflow.app.domain.usecase.LibraryResurfaceUseCase
 import com.sacredflow.app.ui.components.Asterism
 import com.sacredflow.app.ui.components.EmptyState
 import com.sacredflow.app.ui.components.PrayerCard
@@ -100,67 +106,83 @@ fun HomeScreen(
                         style = MaterialTheme.typography.displayLarge,
                         color = palette.primaryInk
                     )
-                    Text(
-                        text = "What would you like to bring into today?",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = palette.ink2
-                    )
                 }
             }
 
-            // ── Primary CTA card ──
+            // ── Daily reflection hero card ──
             item {
                 Spacer(modifier = Modifier.height(20.dp))
-                Card(
+                DailyReflectionCard(
+                    daily = state.daily,
+                    onOpenPrayer = onOpenPrayer,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
+            // ── Demoted "Create another" ──
+            item {
+                OutlinedButton(
                     onClick = onCreate,
                     enabled = state.isPlusUser || state.remainingFreeToday > 0,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = palette.primaryInk,
-                        contentColor = MaterialTheme.colorScheme.background
-                    )
+                        .padding(horizontal = 24.dp)
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, palette.outlineSoft)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Outlined.Add,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.background
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Create a reflection",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.background
-                            )
-                            Text(
-                                text = state.quotaLabel,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.background.copy(alpha = 0.7f)
-                            )
-                        }
-                        Icon(
-                            Icons.AutoMirrored.Outlined.ArrowForward,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.background
-                        )
-                    }
+                    Icon(
+                        Icons.Outlined.Add,
+                        contentDescription = null,
+                        tint = palette.primaryInk
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Create another",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.primaryInk
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "·  ${state.quotaLabel.lowercase()}",
+                        style = typo.overline,
+                        color = palette.ink3
+                    )
                 }
                 Spacer(modifier = Modifier.height(34.dp))
+            }
+
+            // ── Resurface from library ──
+            if (state.resurface.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionHeader("From your library")
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        state.resurface.forEach { card ->
+                            ResurfaceCardView(
+                                card = card,
+                                onOpen = { onOpenPrayer(card.prayer.id) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(34.dp))
+                }
             }
 
             // ── Recent section header ──
@@ -242,6 +264,149 @@ fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+private fun DailyReflectionCard(
+    daily: DailyReflectionState,
+    onOpenPrayer: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val palette = LocalSacredPalette.current
+    val typo = LocalSacredTypography.current
+    val containerColor = palette.primaryInk
+    val onContainer = MaterialTheme.colorScheme.background
+
+    Card(
+        onClick = {
+            if (daily is DailyReflectionState.Ready) onOpenPrayer(daily.prayer.id)
+        },
+        enabled = daily is DailyReflectionState.Ready,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = onContainer,
+            disabledContainerColor = containerColor,
+            disabledContentColor = onContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Asterism(size = 6.dp, color = onContainer)
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "TODAY'S REFLECTION",
+                    style = typo.overline,
+                    color = onContainer.copy(alpha = 0.75f)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            when (daily) {
+                DailyReflectionState.Loading -> {
+                    Text(
+                        text = "Preparing something for today…",
+                        style = MaterialTheme.typography.titleMedium.copy(fontStyle = FontStyle.Italic),
+                        color = onContainer.copy(alpha = 0.85f)
+                    )
+                }
+                is DailyReflectionState.Ready -> {
+                    Text(
+                        text = "“${daily.prayer.bodyText.firstSentencesFor(maxChars = 220)}”",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = onContainer,
+                        maxLines = 5,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Open ·  ${daily.prayer.tone.uppercase()}",
+                            style = typo.overline,
+                            color = onContainer.copy(alpha = 0.75f)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            Icons.AutoMirrored.Outlined.ArrowForward,
+                            contentDescription = null,
+                            tint = onContainer
+                        )
+                    }
+                }
+                is DailyReflectionState.Fallback -> {
+                    Text(
+                        text = "“${daily.text.firstSentencesFor(220)}”",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = onContainer,
+                        maxLines = 5,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Offline — saving will resume when you're back online.",
+                        style = typo.overline,
+                        color = onContainer.copy(alpha = 0.65f)
+                    )
+                }
+                is DailyReflectionState.Failed -> {
+                    Text(
+                        text = daily.message,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = onContainer.copy(alpha = 0.85f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResurfaceCardView(
+    card: LibraryResurfaceUseCase.ResurfaceCard,
+    onOpen: () -> Unit
+) {
+    val palette = LocalSacredPalette.current
+    val typo = LocalSacredTypography.current
+    Card(
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, palette.outlineSoft)
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+            Text(
+                text = "${card.label.uppercase()}  ·  ${card.prayer.recipient.uppercase()}",
+                style = typo.overline,
+                color = palette.ink3
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "“${card.prayer.bodyText.firstSentencesFor(140)}”",
+                style = MaterialTheme.typography.bodyLarge,
+                color = palette.ink,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+private fun String.firstSentencesFor(maxChars: Int): String {
+    val cleaned = trim()
+    if (cleaned.length <= maxChars) return cleaned
+    val cut = cleaned.take(maxChars)
+    val lastStop = cut.lastIndexOfAny(charArrayOf('.', '!', '?'))
+    return if (lastStop > maxChars / 2) cut.substring(0, lastStop + 1) else "$cut…"
 }
 
 private fun todayLabel(): String {

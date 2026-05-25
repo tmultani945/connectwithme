@@ -2,6 +2,7 @@ package com.sacredflow.app.ui.screen.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sacredflow.app.data.repository.PreferenceRepository
 import com.sacredflow.app.domain.model.GenerationRequest
 import com.sacredflow.app.domain.model.GenerationResult
 import com.sacredflow.app.domain.model.Length
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class CreateViewModel @Inject constructor(
     private val observePreferences: ObservePreferencesUseCase,
     private val generatePrayerUseCase: GeneratePrayerUseCase,
+    private val preferenceRepository: PreferenceRepository,
     private val resultHolder: GenerationResultHolder
 ) : ViewModel() {
 
@@ -50,6 +52,9 @@ class CreateViewModel @Inject constructor(
                     needs = Need.fromKeys(prefs.lastUsedNeeds),
                     tone = Tone.fromKey(prefs.defaultTone),
                     length = Length.fromKey(prefs.defaultLength),
+                    // Carry the user's name across from onboarding so the quick path
+                    // can address them without re-asking.
+                    userName = prefs.userName,
                     isPlusUser = prefs.isPlusSubscriber,
                     remainingFreeToday = com.sacredflow.app.data.local.entity.UserPreference.FREE_DAILY_QUOTA,
                     isPrefilled = true
@@ -172,6 +177,26 @@ class CreateViewModel @Inject constructor(
             )
             val result = generatePrayerUseCase(request)
             resultHolder.put(request, result)
+
+            // The app remembers you: a successful generation updates the user's defaults
+            // so the next Quick Start reflects how they actually use the app. Cheap (one
+            // upsert) and quiet — the user doesn't get asked, the defaults just drift.
+            if (result is GenerationResult.Success) {
+                preferenceRepository.update { current ->
+                    current.copy(
+                        defaultUseCase = snapshot.useCase.storageKey,
+                        defaultRecipient = snapshot.recipient.displayName,
+                        defaultTone = snapshot.tone.storageKey,
+                        defaultLength = snapshot.length.storageKey,
+                        userName = if (snapshot.userName.isNotBlank()) snapshot.userName.trim()
+                            else current.userName
+                    )
+                }
+                if (snapshot.recipient is Recipient.Custom) {
+                    preferenceRepository.addCustomRecipient(snapshot.recipient.displayName)
+                }
+            }
+
             _state.update { it.copy(isSubmitting = false) }
 
             when (result) {

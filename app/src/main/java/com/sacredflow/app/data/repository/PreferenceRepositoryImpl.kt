@@ -77,6 +77,15 @@ class PreferenceRepositoryImpl @Inject constructor(
         dao.setSubscriberStatus(isPlus)
     }
 
+    override suspend fun setDailyReflection(localDate: String, prayerId: Long) =
+        withContext(dispatchers.io) {
+            dao.setDailyReflection(localDate, prayerId)
+        }
+
+    override suspend fun setUserName(name: String) = withContext(dispatchers.io) {
+        dao.setUserName(name.trim())
+    }
+
     private fun isSameLocalDay(a: Long, b: Long): Boolean {
         if (a == 0L) return false
         val cal = Calendar.getInstance(TimeZone.getDefault())

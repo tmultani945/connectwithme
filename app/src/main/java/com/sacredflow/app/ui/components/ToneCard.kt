@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.LocalSacredTypography
+import com.sacredflow.app.ui.util.rememberSoftTap
 
 @Composable
 fun ToneCard(
@@ -47,6 +48,7 @@ fun ToneCard(
 ) {
     val palette = LocalSacredPalette.current
     val shape = RoundedCornerShape(16.dp)
+    val softTap = rememberSoftTap()
     Card(
         // Fixed dimensions — was heightIn(min) which let the LazyRow stretch each
         // card to fill all vertical space, and the Spacer-weight pushed the sample
@@ -54,7 +56,7 @@ fun ToneCard(
         modifier = modifier
             .width(210.dp)
             .height(260.dp)
-            .clickable { onClick() },
+            .clickable { softTap(); onClick() },
         shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = if (backgroundRes != null) {

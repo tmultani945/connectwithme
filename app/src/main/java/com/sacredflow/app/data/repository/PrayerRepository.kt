@@ -17,6 +17,14 @@ interface PrayerRepository {
 
     fun observeTotalCount(): Flow<Int>
 
+    suspend fun getById(id: Long): PrayerEntry?
+
+    /** Most recent non-deleted prayer with createdAt >= [sinceMs], or null. */
+    suspend fun findFirstSince(sinceMs: Long): PrayerEntry?
+
+    /** Non-deleted prayers created within [startMs, endMs], newest first. */
+    suspend fun findInRange(startMs: Long, endMs: Long, limit: Int = 5): List<PrayerEntry>
+
     suspend fun save(entry: PrayerEntry, generationHistoryId: Long? = null): Long
 
     suspend fun updateNote(id: Long, note: String?)

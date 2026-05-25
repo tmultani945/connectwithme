@@ -4,13 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sacredflow.app.core.analytics.Analytics
 import com.sacredflow.app.core.analytics.AnalyticsEvent
+import com.sacredflow.app.core.time.Clock
+import com.sacredflow.app.data.repository.PreferenceRepository
 import com.sacredflow.app.domain.model.GenerationRequest
 import com.sacredflow.app.domain.model.GenerationResult
 import com.sacredflow.app.domain.model.Length
 import com.sacredflow.app.domain.model.Recipient
 import com.sacredflow.app.domain.model.UseCase
 import com.sacredflow.app.domain.usecase.CompleteOnboardingUseCase
+import com.sacredflow.app.domain.usecase.SavePrayerUseCase
 import com.sacredflow.app.ui.screen.generation.GenerationResultHolder
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +32,9 @@ import javax.inject.Inject
 class OnboardingViewModel @Inject constructor(
     private val completeOnboarding: CompleteOnboardingUseCase,
     private val resultHolder: GenerationResultHolder,
+    private val savePrayerUseCase: SavePrayerUseCase,
+    private val preferenceRepository: PreferenceRepository,
+    private val clock: Clock,
     private val analytics: Analytics
 ) : ViewModel() {
 
@@ -86,6 +96,13 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    private fun localDateKey(ms: Long): String {
+        val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+            timeZone = TimeZone.getDefault()
+        }
+        return fmt.format(Date(ms))
+    }
+
     private fun submit() {
         val snapshot = _state.value
         val recipient = snapshot.recipient ?: return
@@ -129,7 +146,23 @@ class OnboardingViewModel @Inject constructor(
                 length = Length.Medium.storageKey,
                 userContext = builtContext
             )
-            resultHolder.put(request, result)
+
+            // Persist user's name so the daily generator can address them by name
+            // without re-asking. Cheap; runs whether or not the API call succeeded.
+            if (snapshot.userName.isNotBlank()) {
+                preferenceRepository.setUserName(snapshot.userName)
+            }
+
+            // For a Success: auto-save and mark as today's daily so the user
+            // lands on Home with the daily card already populated (and we don't
+            // burn a second API call generating a duplicate).
+            val savedId: Long? = if (result is GenerationResult.Success) {
+                val id = savePrayerUseCase(request, result)
+                preferenceRepository.setDailyReflection(localDateKey(clock.nowMillis()), id)
+                id
+            } else null
+
+            resultHolder.put(request, result, savedPrayerId = savedId)
 
             _state.update { it.copy(isSubmitting = false) }
 

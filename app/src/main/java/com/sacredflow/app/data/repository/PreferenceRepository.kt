@@ -23,4 +23,12 @@ interface PreferenceRepository {
     suspend fun resetQuotaIfNewDay()
 
     suspend fun setSubscriberStatus(isPlus: Boolean)
+
+    /**
+     * Records that [prayerId] is the daily reflection for [localDate] (yyyy-MM-dd).
+     * Read on Home to decide whether to surface the daily card or generate a new one.
+     */
+    suspend fun setDailyReflection(localDate: String, prayerId: Long)
+
+    suspend fun setUserName(name: String)
 }

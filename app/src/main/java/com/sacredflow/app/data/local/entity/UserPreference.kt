@@ -17,7 +17,14 @@ data class UserPreference(
     val locale: String = "en-US",
     val freeGenerationsToday: Int = 0,
     val freeGenerationsResetAt: Long = 0L,
-    val isPlusSubscriber: Boolean = false
+    val isPlusSubscriber: Boolean = false,
+    // Daily reflection — local-date string (yyyy-MM-dd) + prayer id for today's
+    // auto-generated reflection. Null until first daily is produced.
+    val dailyReflectionDate: String? = null,
+    val dailyReflectionPrayerId: Long? = null,
+    // Name + freeform context captured during onboarding so the daily generator
+    // can address the user by name and stay loosely thematic without re-asking.
+    val userName: String = ""
 ) {
     companion object {
         const val SINGLETON_ID = 1

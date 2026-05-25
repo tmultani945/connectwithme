@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.sacredflow.app.ui.theme.LocalSacredPalette
 import com.sacredflow.app.ui.theme.PillShape
+import com.sacredflow.app.ui.util.rememberSoftTap
 
 /**
  * Pill-shaped filter chip with the warm-letterpress design: ink-dark fill when
@@ -30,10 +31,11 @@ fun DenseChip(
     leadingIcon: ImageVector? = null
 ) {
     val palette = LocalSacredPalette.current
+    val softTap = rememberSoftTap()
     FilterChip(
         modifier = modifier,
         selected = selected,
-        onClick = onClick,
+        onClick = { softTap(); onClick() },
         enabled = enabled,
         label = { Text(label) },
         shape = PillShape,

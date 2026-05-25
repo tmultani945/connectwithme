@@ -83,24 +83,41 @@ import com.sacredflow.app.ui.util.iconRes
 import kotlinx.coroutines.delay
 
 private enum class CreateStep {
-    RECIPIENT, TOPIC, TONE, DETAILS;
+    QUICK_START, RECIPIENT, TOPIC, TONE, DETAILS;
+
+    /** True for the four customization steps that share the progress-dot top bar. */
+    val isFormStep: Boolean get() = this != QUICK_START
+
+    /** 0-based index within the form path (0..3). Used for the progress-dot display. */
+    val formStepOrdinal: Int get() = ordinal - 1
 
     companion object {
-        const val COUNT = 4
-        fun fromOrdinal(o: Int): CreateStep = entries.firstOrNull { it.ordinal == o } ?: RECIPIENT
+        /** Number of dots in the form-path top bar. Does not include QUICK_START. */
+        const val FORM_COUNT = 4
+        fun fromOrdinal(o: Int): CreateStep = entries.firstOrNull { it.ordinal == o } ?: QUICK_START
     }
 }
 
-// A handful of starter topics — concrete and varied to show the range.
+// Starter topics — concrete and varied to show the range. Ordered with the most
+// common life-shaping intents (career, love, wealth) up front so they're the
+// first chips the user sees.
 private val TOPIC_SUGGESTIONS: List<String> = listOf(
-    "Success in my work today",
-    "Abundance and prosperity",
-    "My child's recovery",
-    "Healing a relationship",
+    "Achieve Success in Career",
+    "Attract love",
+    "Bring more wealth",
+    "Heal a relationship",
     "Strength in hardship",
-    "Letting go of fear",
+    "Better health",
+    "Calm my anxiety",
     "A clear decision",
-    "Peace before sleep"
+    "Confidence before a meeting",
+    "Letting go of fear",
+    "Peace before sleep",
+    "Forgiveness",
+    "Patience with myself",
+    "Find my purpose",
+    "Gratitude for today",
+    "Protect my family"
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -113,7 +130,9 @@ fun CreateScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var step by remember { mutableStateOf(CreateStep.RECIPIENT) }
+    // Enter Create on the Quick Start summary by default. The form path is a
+    // side branch reached via the Customize link.
+    var step by remember { mutableStateOf(CreateStep.QUICK_START) }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -126,8 +145,13 @@ fun CreateScreen(
     }
 
     val onBackInternal: () -> Unit = {
-        if (step.ordinal == 0) onBack()
-        else step = CreateStep.fromOrdinal(step.ordinal - 1)
+        when (step) {
+            CreateStep.QUICK_START -> onBack()
+            // Backing out of the first form step returns to the Quick Start summary
+            // rather than exiting — so Customize feels like a true side branch.
+            CreateStep.RECIPIENT -> { step = CreateStep.QUICK_START }
+            else -> { step = CreateStep.fromOrdinal(step.ordinal - 1) }
+        }
     }
 
     Scaffold(
@@ -162,6 +186,14 @@ fun CreateScreen(
                     modifier = Modifier.fillMaxSize()
                 ) { current ->
                     when (current) {
+                        CreateStep.QUICK_START -> StepQuickStart(
+                            state = state,
+                            onAction = viewModel::onAction,
+                            onCustomize = { step = CreateStep.RECIPIENT },
+                            onEditRecipient = { step = CreateStep.RECIPIENT },
+                            onEditTone = { step = CreateStep.TONE },
+                            onSubmit = { viewModel.onAction(CreateAction.Submit) }
+                        )
                         CreateStep.RECIPIENT -> StepRecipient(
                             state = state,
                             onAction = viewModel::onAction,
@@ -209,7 +241,14 @@ private fun CreateFlowTopBar(step: CreateStep, onBack: () -> Unit) {
                 tint = palette.ink2
             )
         }
-        StepDots(current = step.ordinal, total = CreateStep.COUNT)
+        // Hide the progress dots on the Quick Start summary — it's not part of
+        // the customize ritual, it's the entry. Dots only mean something for the
+        // four form steps.
+        if (step.isFormStep) {
+            StepDots(current = step.formStepOrdinal, total = CreateStep.FORM_COUNT)
+        } else {
+            Spacer(modifier = Modifier.size(0.dp))
+        }
         Spacer(modifier = Modifier.size(44.dp))
     }
 }
@@ -287,6 +326,120 @@ private fun StepShell(
                 bottomAction()
             }
         }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quick Start — pre-filled summary; two taps from Home to a generated reflection.
+// The 4-step form lives behind a "Customize" link as a side branch.
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun StepQuickStart(
+    state: CreateState,
+    onAction: (CreateAction) -> Unit,
+    onCustomize: () -> Unit,
+    onEditRecipient: () -> Unit,
+    onEditTone: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    val palette = LocalSacredPalette.current
+    val typo = LocalSacredTypography.current
+
+    StepShell(
+        question = "A reflection,\nwith your usual setup.",
+        helper = "or change something below.",
+        bottomAction = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                PrimaryButton(
+                    text = if (state.isSubmitting) "Listening…" else "Generate",
+                    onClick = onSubmit,
+                    enabled = !state.isSubmitting,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                TextButton(
+                    onClick = onCustomize,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Customize  →",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = palette.ink2
+                    )
+                }
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(22.dp)
+        ) {
+            QuickStartLine(
+                label = "TO",
+                value = state.recipient.displayName,
+                onTap = onEditRecipient
+            )
+            QuickStartLine(
+                label = "TONE",
+                value = state.tone.displayName,
+                onTap = onEditTone
+            )
+            Column {
+                Text("ABOUT (OPTIONAL)", style = typo.overline, color = palette.ink3)
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(end = 8.dp)
+                ) {
+                    items(TOPIC_SUGGESTIONS) { suggestion ->
+                        SuggestionChip(
+                            label = suggestion,
+                            selected = state.topic == suggestion,
+                            onClick = { onAction(CreateAction.SetTopic(suggestion)) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = state.topic,
+                    onValueChange = { onAction(CreateAction.SetTopic(it)) },
+                    placeholder = {
+                        Text(
+                            "What's on your mind today?",
+                            color = palette.ink3,
+                            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic)
+                        )
+                    },
+                    singleLine = false,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            // Clearance for the overlay bottomAction (PrimaryButton + Customize link)
+            // so the last form field isn't hidden behind it.
+            Spacer(modifier = Modifier.height(140.dp))
+        }
+    }
+}
+
+@Composable
+private fun QuickStartLine(
+    label: String,
+    value: String,
+    onTap: () -> Unit
+) {
+    val palette = LocalSacredPalette.current
+    val typo = LocalSacredTypography.current
+    Column(modifier = Modifier.fillMaxWidth().clickable { onTap() }) {
+        Text(label, style = typo.overline, color = palette.ink3)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.displaySmall,
+            color = palette.primaryInk
+        )
     }
 }
 
@@ -444,10 +597,11 @@ private fun StepTopic(
 @Composable
 private fun SuggestionChip(label: String, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalSacredPalette.current
+    val softTap = com.sacredflow.app.ui.util.rememberSoftTap()
     Box(
         modifier = Modifier
             .height(36.dp)
-            .clickable { onClick() }
+            .clickable { softTap(); onClick() }
             .background(
                 if (selected) palette.primarySoft else MaterialTheme.colorScheme.surface,
                 PillShape
@@ -505,8 +659,9 @@ private fun InlineToneCard(tone: Tone, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalSacredPalette.current
     val typo = LocalSacredTypography.current
     val shape = RoundedCornerShape(20.dp)
+    val softTap = com.sacredflow.app.ui.util.rememberSoftTap()
     Card(
-        modifier = Modifier.width(240.dp).height(280.dp).clickable { onClick() },
+        modifier = Modifier.width(240.dp).height(280.dp).clickable { softTap(); onClick() },
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
